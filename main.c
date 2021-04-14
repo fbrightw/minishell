@@ -2,5 +2,5 @@
 
 int	main()
 {
-	printf("Hello minishell\n");
+	printf("Hello World\n");
 }
