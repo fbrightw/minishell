@@ -24,7 +24,7 @@ void	ft_pwd(char	*env[])
 	while (env[i])
 	{
 		current_var = env[i];
-		if (strncmp(current_var, "PWD", 3) == 0)
+		if (strncmp(current_var, "PWD", 3) == 0) 				//ft_strncmp
 			write(1, current_var + 4, strlen(current_var) - 4);
 		i++;
 	}

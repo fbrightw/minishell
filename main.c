@@ -12,7 +12,8 @@
 
 #include "minishell.h"
 
-int	main()
+int	main(int argc, char *argv[], char *env[])
 {
 	printf("Hello Hell World\n");
+	ft_env(env);
 }
