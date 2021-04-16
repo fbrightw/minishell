@@ -16,5 +16,6 @@
 # include "../minishell.h"
 
 void	ft_echo(char *str, int flag_n);
+void	ft_pwd(char	*env[]);
 
 #endif
