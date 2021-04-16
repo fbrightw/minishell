@@ -1,18 +1,20 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   main.c                                             :+:      :+:    :+:   */
+/*   builtins.h                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: rvinnie <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2021/04/16 11:11:43 by rvinnie           #+#    #+#             */
-/*   Updated: 2021/04/16 11:11:45 by rvinnie          ###   ########.fr       */
+/*   Created: 2021/04/16 11:11:29 by rvinnie           #+#    #+#             */
+/*   Updated: 2021/04/16 11:11:30 by rvinnie          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "minishell.h"
+#ifndef BUILTINS_H
+# define BUILTINS_H
 
-int	main()
-{
-	printf("Hello Hell World\n");
-}
+# include "../minishell.h"
+
+void	ft_echo(char *str, int flag_n);
+
+#endif

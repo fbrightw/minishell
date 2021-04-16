@@ -1,18 +1,24 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   main.c                                             :+:      :+:    :+:   */
+/*   ft_echo.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: rvinnie <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2021/04/16 11:11:43 by rvinnie           #+#    #+#             */
-/*   Updated: 2021/04/16 11:11:45 by rvinnie          ###   ########.fr       */
+/*   Created: 2021/04/16 11:11:20 by rvinnie           #+#    #+#             */
+/*   Updated: 2021/04/16 11:11:22 by rvinnie          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "minishell.h"
+#include "builtins.h"
 
-int	main()
+// flag_n == 0 -> with    "\n"
+// flag_n == 1 -> without "\n"
+// No errors in function
+
+void	ft_echo(char *str, int flag_n)
 {
-	printf("Hello Hell World\n");
+	write(1, str, strlen(str)); // change to ft_strlen
+	if (!flag_n)
+		write(1, "\n", 1);
 }
