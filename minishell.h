@@ -13,12 +13,16 @@
 #ifndef MINISHELL_H
 # define MINISHELL_H
 
-# include "builtins/builtins.h"
+
 # include <unistd.h>
 # include <stdlib.h>
 # include <stdio.h>
 # include <fcntl.h>
 # include <sys/errno.h>
 # include <string.h>
+# include <limits.h>
+# include "builtins/builtins.h"
+
+
 
 #endif

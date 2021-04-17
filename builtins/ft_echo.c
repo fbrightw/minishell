@@ -18,7 +18,7 @@
 
 void	ft_echo(char *str, int flag_n)
 {
-	write(1, str, strlen(str)); // change to ft_strlen
+	write(1, str, ft_strlen(str)); // change to ft_strlen
 	if (!flag_n)
 		write(1, "\n", 1);
 }

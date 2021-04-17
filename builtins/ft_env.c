@@ -21,8 +21,7 @@ void	ft_env(char *env[])
 	while (env[i])
 	{
 		current_var = env[i];
-		write(1, current_var, strlen(current_var));
-		write(1, "\n", 1);
+		ft_putstr_n(current_var);
 		i++;
 	}
 }
