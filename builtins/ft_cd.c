@@ -1,23 +1,28 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ft_pwd.c                                           :+:      :+:    :+:   */
+/*   ft_cd.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: rvinnie <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2021/04/16 12:22:46 by rvinnie           #+#    #+#             */
-/*   Updated: 2021/04/16 12:22:47 by rvinnie          ###   ########.fr       */
+/*   Created: 2021/04/17 11:53:41 by rvinnie           #+#    #+#             */
+/*   Updated: 2021/04/17 11:53:42 by rvinnie          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "builtins.h"
 
-void	ft_pwd(void)
+void	ft_cd(t_env *s_env, char *arg)
 {
-	size_t	size;
-	char	buf[PATH_MAX];
-	char	*ptr;
+	int		ret;
+	char	*new_dir;
 
-	ptr = getcwd(buf, PATH_MAX);				// don't forget error checker and errno and ptr == NULL
-	ft_putstr_n(buf);
+	if (arg[0] == '\0')
+		new_dir = ft_strdup(s_env->home);
+	else if (arg[0] == '~')
+		new_dir = ft_strcat(s_env->home, ++arg);
+	else
+		new_dir = ft_strdup(arg);
+	ret = chdir(new_dir);	// don't forget error checker
+	free(new_dir);
 }

@@ -12,7 +12,8 @@
 
 #include "minishell.h"
 
-int	main()
+int	main(int argc, char *argv[], char *env[])
 {
-	printf("Hello Hell World\n");
+	t_env	s_env;
+	set_env(&s_env, env); // <- Закидываю переменные окружения в новый двумерный массив
 }
