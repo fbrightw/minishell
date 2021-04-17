@@ -13,7 +13,6 @@
 #ifndef MINISHELL_H
 # define MINISHELL_H
 
-
 # include <unistd.h>
 # include <stdlib.h>
 # include <stdio.h>
@@ -22,7 +21,7 @@
 # include <string.h>
 # include <limits.h>
 # include "builtins/builtins.h"
-
+# include "libft/libft.h"
 
 
 #endif

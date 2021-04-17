@@ -1,19 +1,35 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   main.c                                             :+:      :+:    :+:   */
+/*   set_env.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: rvinnie <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2021/04/16 11:11:43 by rvinnie           #+#    #+#             */
-/*   Updated: 2021/04/16 11:11:45 by rvinnie          ###   ########.fr       */
+/*   Created: 2021/04/17 13:54:17 by rvinnie           #+#    #+#             */
+/*   Updated: 2021/04/17 13:54:18 by rvinnie          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "minishell.h"
+#include "builtins.h"
 
-int	main(int argc, char *argv[], char *env[])
+void	set_env(t_env *s_env, char **env)
 {
-	t_env	s_env;
-	set_env(&s_env, env); // <- Закидываю переменные окружения в новый двумерный массив
+	int		row;
+	int		i;
+	char	**env_array;
+
+	row = 0;
+	i = 0;
+	while (env[row])
+		row++;
+	env_array = malloc((row + 1) * sizeof(char*));
+	while (env[i])
+	{
+		env_array[i] = ft_strdup(env[i]);
+		i++;
+	}
+	env_array[i] = NULL;
+	s_env->env_arr = env_array;
+	i = 0;
+	s_env->home = getenv("HOME");
 }

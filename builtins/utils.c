@@ -22,16 +22,6 @@ int get_arr_len(char *arr[])
 	return (i);
 }
 
-size_t	ft_strlen(const char *s)
-{
-	size_t	i;
-
-	i = 0;
-	while (s[i])
-		i++;
-	return (i);
-}
-
 void	ft_putstr_n(char *str)
 {
 	write(1, str, ft_strlen(str));

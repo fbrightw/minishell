@@ -17,10 +17,12 @@ void	ft_cd(t_env *s_env, char *arg)
 	int		ret;
 	char	*new_dir;
 
-	if (arg[0] == '~')
-	{
-		// new_dir = ft_strcat(s_env);
-	}
+	if (arg[0] == '\0')
+		new_dir = ft_strdup(s_env->home);
+	else if (arg[0] == '~')
+		new_dir = ft_strcat(s_env->home, ++arg);
+	else
+		new_dir = ft_strdup(arg);
 	ret = chdir(new_dir);	// don't forget error checker
-	// ret = chdir(arr[1]);
+	free(new_dir);
 }

@@ -12,13 +12,9 @@
 
 #include "builtins.h"
 
-// flag_n == 0 -> with    "\n"
-// flag_n == 1 -> without "\n"
-// No errors in function
-
 void	ft_echo(char *str, int flag_n)
 {
-	write(1, str, ft_strlen(str)); // change to ft_strlen
+	write(1, str, ft_strlen(str));
 	if (!flag_n)
 		write(1, "\n", 1);
 }
