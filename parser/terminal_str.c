@@ -56,7 +56,7 @@ void	strings(char *str, int *numb, t_list **history, char **buf)
 			tputs(restore_cursor, 1, ft_putchar);
 			tputs(tgetstr("ce", 0), 1, ft_putchar); //delete line
 			write_lists(*history, *numb);
-			tputs(restore_cursor, 1, ft_putchar);
+			// tputs(save_cursor, 1, ft_putchar);
 		}
 		else
 			tputs(restore_cursor, 1, ft_putchar);
@@ -97,7 +97,7 @@ void	save_history_in_lists(t_list **history)
 	while (strcmp(str, "\n") && strcmp(str, "\4"))
 		strings(str, &numb, history, &buf);
 	ft_lstadd_back(history, ft_lstnew(buf));
-	split_into_commands(history, buf);
+	split_into_commands(history, &buf);
 }
 
 int main()
