@@ -2,103 +2,77 @@
 
 // buf = "ls -al | pwd ; echo "PATH" fg"
 // needed result : "ls -al"->|->"pwd"->";"->"echo" "PATH"
-void	alloc_mem_for_word(char **com, char *buf, int k, char *fin_str)
+char	**alloc_mem_for_word(char **com, char *buf, int k, char *fin_str)
 {
-	char **new_com;
-	int i;
+	char	**new_com;
+	int		i;
+	int		l1;
 
 	i = 0;
 	new_com = (char**)malloc(sizeof(char*) * (k + 1));
-	while (k > 0)
+	while (com[i])
 	{
-		// write(1, "a", 1);
-		if (com[i])
-		{
-			// write(1, "a", 1);
-			new_com[i] = ft_strdup(com[i]);
-		}
-		else
-		{
-			// write(1, "a", 1);
-			new_com[i] = malloc(sizeof(char));
-			new_com[i] = NULL;
-			// printf("%s\n", new_com[i]);
-		}
-		k--;
+		new_com[i] = com[i];
 		i++;
 	}
-	// while (com[i])
-	// {
-	// 	free(com[i]);
-	// 	i++;
-	// }
-	// if (com)
-	// 	free(com);
-	com = new_com;
-	// printf("%s\n", com[0]);
+	new_com[i] = fin_str;
+	new_com[i + 1] = 0;
+	if (com)
+		free(com);
+	return (new_com);
 }
 
-void	filling_arr_in_list(t_comm **com_in_str, char **buf, char *temp)
+void	filling_arr_in_list(t_comm **com_in_str, char **buf, char *temp, t_all *main_struct)
 {
 	int arr_row;
-	char *fin_str;
+	char *final_str;
 	int k;
 	int i;
 	char **com;
-	char **new_com;
 
 	arr_row = 0;
 	k = 1;
 	i = 0;
-	fin_str = NULL;
-	com = malloc(sizeof(char*));
-	com[0] = malloc(sizeof(char));
+	final_str = NULL;
+	com = (char**)malloc(sizeof(char*));
 	com[0] = NULL;
-	while (!ft_strchr("|;<>", **buf)) //    ls  m;
+	while (!ft_strchr("|;", **buf)) //    ls  m  s f
 	{
 		if (**buf == ' ')
 		{
-			alloc_mem_for_word(com, *buf, k, fin_str); // новая память ( старое кол-во слов + новое слово)
-			com[k - 1] = ft_strdup(fin_str);
+			com = alloc_mem_for_word(com, *buf, k, final_str); // новая память ( старое кол-во слов + новое слово)
 			while (**buf == ' ')
 				(*buf)++;
 			arr_row += 1;
 			k += 1;
-			free(fin_str);
-			fin_str = NULL;
+			final_str = NULL;
 		}
 		else
 		{
 			temp[0] = **buf;
-			if (!fin_str)
-				fin_str = ft_strdup(temp);
+			if (!final_str)
+				final_str = ft_strdup(temp);
 			else
-				fin_str = ft_strjoin(fin_str, temp);
+				final_str = ft_strjoin(final_str, temp);
 			(*buf)++;
 		}
 	}
 	ft_lstadd_back_n(com_in_str, ft_lstnew_n(com));
-	while (com[i])
-	{
-		free(com[i]);
-		i++;
-	}
-	free(com);
-	free(temp);
+	main_struct->args = com;
 	temp = NULL;
 }
 
-void	find_coms_args(t_comm **com_in_str, char **buf, char *temp_for_one_ch)
+void	find_coms_args(t_comm **com_in_str, char **buf, char *temp_for_one_ch, t_all *main_struct)
 {
 	int arr_row;
 
 	temp_for_one_ch = malloc(sizeof(char) * 2);
 	temp_for_one_ch[1] = '\0';
 	// двумерный массив состоящий из n строк, где n - количество слов до |, ;, <>
-	filling_arr_in_list(com_in_str, buf, temp_for_one_ch);
+	filling_arr_in_list(com_in_str, buf, temp_for_one_ch, main_struct);
 }
 
-void	split_into_commands(t_list **history, char **buf)
+void	split_into_commands(t_list **history, char **buf, t_all *main_struct)
 {
 	char *temp_for_one_ch;
 	t_comm *com_in_str;
@@ -109,11 +83,12 @@ void	split_into_commands(t_list **history, char **buf)
 	temp_for_one_ch = NULL;
 	while (**buf)
 	{
-		if (!ft_strchr("|;<>", **buf)) // not |;<>
+		if (!ft_strchr("|;", **buf)) // not |;<>
 		{
+
 			while (**buf == ' ')
 				(*buf)++;
-			find_coms_args(&com_in_str, buf, temp_for_one_ch);
+			find_coms_args(&com_in_str, buf, temp_for_one_ch, main_struct);
 		}
 		else
 			(*buf)++;
