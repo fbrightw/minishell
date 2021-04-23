@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "builtins.h"
+#include "../includes/minishell.h"
 
 void	ft_pwd(void)
 {
@@ -19,5 +19,6 @@ void	ft_pwd(void)
 	char	*ptr;
 
 	ptr = getcwd(buf, PATH_MAX);				// don't forget error checker and errno and ptr == NULL
-	ft_putstr_n(buf);
+	write(1, buf, ft_strlen(buf));
+	write(1, "\n", 1);
 }

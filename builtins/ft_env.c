@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "builtins.h"
+#include "../includes/minishell.h"
 
 void	ft_env(char *env[])
 {
@@ -21,7 +21,8 @@ void	ft_env(char *env[])
 	while (env[i])
 	{
 		current_var = env[i];
-		ft_putstr_n(current_var);
+		write(1, current_var, ft_strlen(current_var));
+		write(1, "\n", 1);
 		i++;
 	}
 }

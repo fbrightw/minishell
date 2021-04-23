@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "builtins.h"
+#include "../includes/minishell.h"
 
 int get_arr_len(char *arr[])
 {
@@ -20,12 +20,6 @@ int get_arr_len(char *arr[])
 	while (arr[i])
 		i++;
 	return (i);
-}
-
-void	ft_putstr_n(char *str)
-{
-	write(1, str, ft_strlen(str));
-	write(1, "\n", 1);
 }
 
 char	*ft_strcat(char *s1, char *s2)
@@ -48,4 +42,14 @@ char	*ft_strcat(char *s1, char *s2)
 		ret[i++] = s2[j++];
 	ret[i] = '\0';
 	return (ret);
+}
+
+void	free_arr(char **arr)
+{
+	int	i;
+
+	i = 0;
+	while (arr[i])
+		free(arr[i++]);
+	free(arr);
 }
