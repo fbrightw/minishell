@@ -6,7 +6,7 @@ int	ft_putchar (int c)
 	return (1);
 }
 
-void	write_lists(t_list *history, int numb)
+void	write_lists(t_list *history, int numb, char **buf)
 {
 	int count;
 
@@ -18,27 +18,35 @@ void	write_lists(t_list *history, int numb)
 	}
 
 	if (history != NULL)
+	{
 		write(1, history->content, ft_strlen(history->content));
+		*buf = history->content;
+	}
 }
 
-void	continue_of_func(int l, char *str, char **buf)
+void	continue_of_func(t_list **history, int l, char *str, char **buf)
 {
-	if (!strcmp(str, "\177"))
+	char *new_buf;
+	int len;
+
+	new_buf = NULL;
+	if (*str == 127)
 	{
 		tputs(tgetstr("le", 0), 1, ft_putchar);
 		tputs(tgetstr("dc", 0), 1, ft_putchar);
+		len = ft_strlen(*buf);
+		new_buf = ft_substr(*buf, 0, len - 1);
+		*buf = new_buf;
 	}
 	else
 	{
-		if (*buf == 0)
+		write(1, str, l);
+		if (*str != '\n' && *str != '\4')
 		{
-			*buf = ft_strdup(str);
-			write(1, *buf, 1);
-		}
-		else
-		{
-			*buf = ft_strjoin(*buf, str); //leaks
-			write(1, str, l);
+			if (*buf == 0)
+				*buf = ft_strdup(str);
+			else
+				*buf = ft_strjoin(*buf, str); //leaks
 		}
 	}
 }
@@ -48,6 +56,7 @@ void	strings(char *str, int *numb, t_list **history, char **buf)
 	int l;
 
 	l = read(0, str, 100);
+	str[l] = '\0';
 	if (!strcmp(str, "\e[A"))
 	{
 		if (*numb != 0)
@@ -55,11 +64,8 @@ void	strings(char *str, int *numb, t_list **history, char **buf)
 			*numb -= 1;
 			tputs(restore_cursor, 1, ft_putchar);
 			tputs(tgetstr("ce", 0), 1, ft_putchar); //delete line
-			write_lists(*history, *numb);
-			tputs(restore_cursor, 1, ft_putchar);
+			write_lists(*history, *numb, buf);
 		}
-		else
-			tputs(restore_cursor, 1, ft_putchar);
 	}
 	else if (!strcmp(str, "\e[B"))
 	{
@@ -68,17 +74,16 @@ void	strings(char *str, int *numb, t_list **history, char **buf)
 		if (*numb < ft_lstsize(*history) + 1)
 		{
 			*numb += 1;
-			write_lists(*history, *numb);
+			write_lists(*history, *numb, buf);
 		}
-		tputs(restore_cursor, 1, ft_putchar);
 	}
-	continue_of_func(l, str, buf);
+	else
+		continue_of_func(history, l, str, buf);
 }
 
-void	save_history_in_lists(t_list **history)
+char	*save_history_in_lists(t_list **history, t_all *main_struct)
 {
-	char str[2000];
-	int l;
+	char str[200];
 	int numb;
 	char *buf;
 	struct termios term;
@@ -86,6 +91,7 @@ void	save_history_in_lists(t_list **history)
 
 	numb = ft_lstsize(*history) + 1;
 	buf = NULL;
+	str[0] = '\0';
 	tcgetattr(0, &term); //возвращает инфу по открытому fd, связанному с терминалом {считываем текущий режим работы терминала}
 	term.c_lflag &= ~(ECHO); //включен режим отображения
 	term.c_lflag &= ~(ICANON); //ввод в каноническом виде
@@ -93,18 +99,8 @@ void	save_history_in_lists(t_list **history)
 	tgetent(0, term_name);
 	ft_putstr_fd("\e[32m minishell \e[0m", 1);
 	tputs(save_cursor, 1, ft_putchar);
-	strings(str, &numb, history, &buf);
 	while (strcmp(str, "\n") && strcmp(str, "\4"))
 		strings(str, &numb, history, &buf);
 	ft_lstadd_back(history, ft_lstnew(buf));
-	split_into_commands(history, buf);
-}
-
-int main()
-{
-	t_list *history;
-
-	history = NULL;
-	while (1)
-		save_history_in_lists(&history);
+	return (buf);
 }

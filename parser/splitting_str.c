@@ -2,101 +2,108 @@
 
 // buf = "ls -al | pwd ; echo "PATH" fg"
 // needed result : "ls -al"->|->"pwd"->";"->"echo" "PATH"
-void	allocating_mem(t_comm *com_in_str, int k)
+char	**alloc_mem_for_word(char **com, char *buf, int k, char *fin_str)
 {
-	int i;
+	char	**new_com;
+	int		i;
+	int		l1;
 
 	i = 0;
-	// printf("%d\n", k);
-	com_in_str->args = (char**)malloc(sizeof(char*) * k);
-	while (k > 0)
+	new_com = (char**)malloc(sizeof(char*) * (k + 1));
+	while (com[i])
 	{
-		com_in_str->args[i] = malloc(sizeof(char*));
-		com_in_str->args[i] = NULL;
-		k--;
+		new_com[i] = com[i];
 		i++;
 	}
+	new_com[i] = fin_str;
+	new_com[i + 1] = 0;
+	if (com)
+		free(com);
+	return (new_com);
 }
 
-void	find_coms_args(t_comm **com_in_str, int *i, char *buf)
+void	filling_arr_in_list(t_comm **com_in_str, char **buf, char *temp, t_all *main_struct)
 {
-	char *temp_for_one_ch;
-	char *fin_str;
+	int arr_row;
+	char *final_str;
 	int k;
-	int i1;
+	int i;
+	char **com;
+
+	arr_row = 0;
+	k = 1;
+	i = 0;
+	final_str = NULL;
+	com = (char**)malloc(sizeof(char*));
+	com[0] = NULL;
+	while (!ft_strchr(";", **buf)) //    ls  m  s f
+	{
+		if (**buf == ' ')
+		{
+			com = alloc_mem_for_word(com, *buf, k, final_str); // новая память ( старое кол-во слов + новое слово)
+			while (**buf == ' ')
+				(*buf)++;
+			arr_row += 1;
+			k += 1;
+			final_str = NULL;
+		}
+		else if (ft_strchr("\'\"$<>?", **buf))
+			spec_symbols(com, buf);
+		else
+		{
+			temp[0] = **buf;
+			if (!final_str)
+				final_str = ft_strdup(temp);
+			else
+				final_str = ft_strjoin(final_str, temp);
+			(*buf)++;
+		}
+	}
+	if (final_str)
+	{
+		com = alloc_mem_for_word(com, *buf, k, final_str);
+		final_str = NULL;
+	}
+	ft_lstadd_back_n(com_in_str, ft_lstnew_n(com));
+	while (com[i])
+	{
+		printf("%s\n", com[i]);
+		i++;
+	}
+	// тут функции Леши
+	temp = NULL;
+}
+
+void	find_coms_args(t_comm **com_in_str, char **buf, char *temp_for_one_ch, t_all *main_struct)
+{
 	int arr_row;
 
-	k = 1;
-	i1 = *i;
-	fin_str = NULL;
 	temp_for_one_ch = malloc(sizeof(char) * 2);
 	temp_for_one_ch[1] = '\0';
 	// двумерный массив состоящий из n строк, где n - количество слов до |, ;, <>
-	while (!ft_strchr("|;<>", buf[i1]))
-	{
-		if (buf[i1] == ' ')
-			k++;
-		i1++;
-	}
-	// printf("%d\n", k);
-	// allocating_mem(*com_in_str, k);
-
-	// не начинаются с пробела
-	while (!ft_strchr("|;<>", buf[*i])) //    ls  m;
-	{
-		if (buf[*i] == ' ')
-		{
-			(*com_in_str)->args[arr_row] = ft_strdup(fin_str);
-			arr_row += 1;
-			free(fin_str);
-			fin_str = NULL;
-		}
-		else
-		{
-			temp_for_one_ch[0] = buf[*i];
-			if (!fin_str)
-				fin_str = ft_strdup(temp_for_one_ch);
-			else
-				fin_str = ft_strjoin(fin_str, temp_for_one_ch);
-		}
-		*i += 1;
-	}
-	// printf("%s\n", (*com_in_str)->args[0]);
-	ft_lstadd_back_n(com_in_str, ft_lstnew_n((*com_in_str)->args));
-	*i += 1;
+	filling_arr_in_list(com_in_str, buf, temp_for_one_ch, main_struct);
 }
 
-void	split_into_commands(t_list **history, char *buf)
+void	split_into_commands(t_list **history, char **buf, t_all *main_struct)
 {
+	char *temp_for_one_ch;
 	t_comm *com_in_str;
 	int i;
-	int k;
-	int arr_row;
-	int count_com;
-	// cколько команд в строчке
-	i = 0;
-	k = 1;
-	while (buf[i])
-	{
-		if (ft_strchr("|;<>", buf[i]))
-			k++;
-		i++;
-	}
+	int fl;
 
-	com_in_str = NULL;
-	// листы с двумерными массивами
-	arr_row = 0;
-	count_com = 0;
 	i = 0;
-	while (buf[i])
+	fl = 0;
+	com_in_str = NULL;
+	temp_for_one_ch = NULL;
+	while (**buf)
 	{
-		if (!ft_strchr("|;<>", buf[i])) // not |;<>
+		if (!ft_strchr(";", **buf)) // not |;<>
 		{
-			while (buf[i] == ' ')
-				i++;
-			find_coms_args(&com_in_str, &i, buf);
+			while (**buf == ' ')
+				(*buf)++;
+			find_coms_args(&com_in_str, buf, temp_for_one_ch, main_struct);
 		}
 		else
-			i++;
+			(*buf)++;
 	}
 }

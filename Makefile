@@ -4,13 +4,11 @@ NAME	=	minishell.a
 
 # CFLAGS	=	-Wall -Wextra -Werror
 
-LIBFT	=	libft
+LFLAGS	=	-ltermcap
 
-LFLAGS	=	-L ./$(LIBFT) -lft -ltermcap
+LIBFT	=	./libft/libft.a
 
-LIBRARY	=	./libft/libft.a
-
-SRCS	:=	parser/terminal_str.c parser/splitting_str.c
+SRCS	:=	parser/terminal_str.c parser/splitting_str.c utils/lists.c
 
 OBJS	:=	$(SRCS:.c=.o)
 
@@ -18,18 +16,23 @@ RM	=	rm	-f
 
 all:	$(NAME)
 
-$(NAME):	$(OBJS) $(LIBRARY)
+$(NAME):	$(OBJS)
 	ar rcs $(NAME) $(OBJS)
 
-.c.o:
-	$(CC) $(CFLAGS) -g -c $< -o $(<:.c=.o)
+$(LIBFT):
+	$(MAKE) -C ./libft
 
+.c.o:
+	$(CC) $(CFLAGS) -c $< -o $(<:.c=.o)
+
+test:
+	gcc main_fbrightw.c -ltermcap libft/libft.a $(NAME)
 clean:
 	$(RM)	$(OBJS)
 
 fclean:	clean
 	$(RM)	$(NAME)
 
-re:	clean	all
+re:	fclean	all
 
 .PHONY:	all	clean	fclean	re
