@@ -1,97 +1,163 @@
 #include "../includes/minishell.h"
 
-int	ft_putchar (int c)
-{
-	write(1, &c, 1);
-	return (1);
-}
-
-void	write_lists(t_list *history, int numb)
+t_history	*exact_list(t_list *history, t_var *var)
 {
 	int count;
 
 	count = 0;
+	t_history *exact_l;
+
+	while (count < (var->numb) - 1)
+	{
+		history = history->next;
+		count++;
+	}
+	exact_l = ((t_history*)(history->content));
+	return (exact_l);
+}
+
+void	strings(t_list **history, t_var *var,  t_history **hist)
+{
+	int l;
+
+	l = read(0, var->str, 100);
+	var->str[l] = '\0';
+	if (!strcmp(var->str, "\e[A"))
+		up(history, var, hist);
+	else if (!strcmp(var->str, "\e[B"))
+		down(history, var, hist);
+	else if (*(var->str) == 127)
+		backsp(history, var, hist);
+	else
+		word(history, var, hist);
+}
+
+void	termcaps(struct termios term, t_var *var, t_all *main_struct)
+{
+	var->term_name = find_variable_in_env(main_struct, "TERM", 0); //xterm-256color  (каждый)
+	tcgetattr(0, &term); //возвращает инфу по открытому fd, связанному с терминалом {считываем текущий режим работы терминала}
+	term.c_lflag &= ~(ECHO); //включен режим отображения
+	term.c_lflag &= ~(ICANON); //ввод в каноническом виде
+	tcsetattr(0, TCSANOW, &term); //устанавливает атрибуты терминала, ассоциированного с fd.
+	tgetent(0, var->term_name);
+	ft_putstr_fd("\e[32m minishell \e[0m", 1);
+	tputs(save_cursor, 1, ft_putchar);
+	free(var->term_name);
+}
+
+void	return_value(t_list **history, t_var *var, int numb)
+{
+	int i;
+	char *change;
+	char *temp;
+
+	i = 0;
+	while (i < numb)
+	{
+		*history = (*history)->next;
+		change = ((t_history *)(*history)->content)->changes;
+		temp = ((t_history *)(*history)->content)->temp;
+		change = ft_strdup(temp);
+		i++;
+	}
+	i++;
+	*history = (*history)->next;
+	while (i < var->quant)
+	{
+		*history = (*history)->next;
+		change = ((t_history *)(*history)->content)->changes;
+		temp = ((t_history *)(*history)->content)->temp;
+		change = ft_strdup(temp);
+		i++;
+	}
+}
+
+void	get_exact_str(t_list *history, t_history **list_struct, int numb)
+{
+	int count;
+
+	count = 0;
+	t_history *exact_l;
 	while (count < numb - 1)
 	{
 		history = history->next;
 		count++;
 	}
-
-	if (history != NULL)
-		write(1, history->content, ft_strlen(history->content));
+	exact_l = (t_history*)(history->content);
+	(*list_struct)->temp = ft_strdup(exact_l->changes);
+	(*list_struct)->changes = ft_strdup((*list_struct)->temp);
 }
 
-void	continue_of_func(int l, char *str, char **buf)
+void	prev_hist(t_list *history, t_var *var)
 {
-	if (!strcmp(str, "\177"))
+	int i;
+
+	i = 0;
+	while (i < var->numb)
 	{
-		tputs(tgetstr("le", 0), 1, ft_putchar);
-		tputs(tgetstr("dc", 0), 1, ft_putchar);
+		((t_history*)(history)->content)->changes = ((t_history*)(history)->content)->temp;
+		history = history->next;
+		i++;
 	}
-	else if (*str != '\n')
+	i++;
+	while (i < var->quant)
 	{
-		if (*buf == 0)
-		{
-			*buf = ft_strdup(str);
-			write(1, *buf, 1);
-		}
-		else
-		{
-			*buf = ft_strjoin(*buf, str); //leaks
-			write(1, str, l);
-		}
+		((t_history*)(history)->content)->changes = ((t_history*)(history)->content)->temp;
+		(history) = (history)->next;
+		i++;
 	}
 }
 
-void	strings(char *str, int *numb, t_list **history, char **buf)
+char	*save_history_in_lists(t_list **history, t_all *main_struct, t_var *var)
 {
-	int l;
-
-	l = read(0, str, 100);
-	if (!strcmp(str, "\e[A"))
-	{
-		if (*numb != 0)
-		{
-			*numb -= 1;
-			tputs(restore_cursor, 1, ft_putchar);
-			tputs(tgetstr("ce", 0), 1, ft_putchar); //delete line
-			write_lists(*history, *numb);
-		}
-	}
-	else if (!strcmp(str, "\e[B"))
-	{
-		tputs(restore_cursor, 1, ft_putchar);
-		tputs(tgetstr("ce", 0), 1, ft_putchar);
-		if (*numb < ft_lstsize(*history) + 1)
-		{
-			*numb += 1;
-			write_lists(*history, *numb);
-		}
-	}
-	else
-		continue_of_func(l, str, buf);
-}
-
-void	save_history_in_lists(t_list **history, t_all *main_struct)
-{
-	char str[2000];
-	int numb;
-	char *buf;
 	struct termios term;
-	char *term_name = "xterm-256color";
+	t_history *list_struct;
 
-	numb = ft_lstsize(*history) + 1;
-	buf = NULL;
-	str[0] = '\0';
-	tcgetattr(0, &term); //возвращает инфу по открытому fd, связанному с терминалом {считываем текущий режим работы терминала}
-	term.c_lflag &= ~(ECHO); //включен режим отображения
-	term.c_lflag &= ~(ICANON); //ввод в каноническом виде
-	tcsetattr(0, TCSANOW, &term); //устанавливает атрибуты терминала, ассоциированного с fd.
-	tgetent(0, term_name);
-	ft_putstr_fd("\e[32m minishell \e[0m", 1);
-	tputs(save_cursor, 1, ft_putchar);
-	while (strcmp(str, "\n") && strcmp(str, "\4"))
-		strings(str, &numb, history, &buf);
-	ft_lstadd_back(history, ft_lstnew(buf));
-	split_into_commands(history, &buf, main_struct);
+	var->str[0] = '\0';
+
+	list_struct = malloc(sizeof(t_history));
+	list_struct->temp = malloc(sizeof(char));
+	list_struct->changes = NULL;
+	list_struct->temp[0] = '\0';
+
+	// termcaps
+	termcaps(term, var, main_struct);
+
+	var->quant = ft_lstsize(*history) + 1;
+	var->numb = var->quant;
+
+	// the main loop
+	while (strcmp(var->str, "\n") && strcmp(var->str, "\4"))
+		strings(history, var, &list_struct);
+
+	if (var->numb == var->quant)
+	{
+		if (list_struct->temp[0] != '\0')
+		{
+			list_struct->changes = ft_strdup(list_struct->temp);
+			ft_lstadd_back(history, ft_lstnew(list_struct));
+			prev_hist(*history, var);
+			// t_list *iter = *history;
+			// while (iter)
+			// {
+			// 	printf("%s\n", ((t_history*)(iter->content))->changes);
+			// 	iter = iter->next;
+			// }
+			return(list_struct->temp);
+		}
+	}
+	else if (var->numb != 0)
+	{
+		if (exact_list(*history, var)->changes[0] != '\0')
+		{
+			get_exact_str(*history, &list_struct, var->numb);
+			if (list_struct->temp[0] != '\0')
+			{
+				prev_hist(*history, var);
+				ft_lstadd_back(history, ft_lstnew(list_struct));
+				return(list_struct->changes);
+			}
+		}
+		return (list_struct->temp);
+	}
 }
