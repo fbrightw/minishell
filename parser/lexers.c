@@ -27,25 +27,6 @@ char	*find_variable_in_env(t_all *main_struct, char *varible, int fl_to_free)
 	return (final_str);
 }
 
-// char	*build_word(char **term_str, char symb_of_stop, char *temp)
-// {
-// 	char *final_str;
-
-// 	final_str = NULL;
-// 	while (**term_str != symb_of_stop && **term_str)
-// 	{
-// 		temp[0] = **term_str;
-// 		if (!final_str)
-// 			final_str = ft_strdup(temp);
-// 		else
-// 			final_str = ft_strjoin(final_str, temp);
-// 		(*term_str)++;
-// 	}
-// 	// if (**buf != '\'')
-// 	// 	write(1, "NEED DO SMTH\n", 20);
-// 	return (final_str);
-// }
-
 // char	**spec_symbols(t_all *main_struct, char **com, char **term_str, int k)
 // {
 // 	int i;

@@ -18,7 +18,11 @@ void	word(t_list **history, t_var *var, t_history **list_struct)
 			if (((*list_struct)->temp)[0] != '\0')
 				(*list_struct)->temp = ft_strjoin((*list_struct)->temp, var->str);
 			else
+			{
+				// write(1, "YA\n", 3);
+				free((*list_struct)->temp);
 				(*list_struct)->temp = ft_strdup(var->str);
+			}
 		}
 		else
 		{
@@ -47,7 +51,7 @@ void	backsp(t_list **history, t_var *var,  t_history **list_struct)
 	else
 	{
 		hist = exact_list(*history, var);
-		if (ft_strlen(hist->changes) != 0)
+		if (hist && hist->changes[0] != '\0')
 		{
 			tputs(tgetstr("le", 0), 1, ft_putchar);
 			tputs(tgetstr("dc", 0), 1, ft_putchar);
@@ -76,23 +80,21 @@ void	down(t_list **history, t_var *var, t_history **list_struct)
 void	up(t_list **history, t_var *var, t_history **list_struct)
 {
 	t_history *hist;
-	if (var->numb > 0)
+	if (var->numb > 1)
 		var->numb -= 1;
-	if (var->numb != 0)
+	if (var->numb > 0)
 		hist = exact_list(*history, var);
 	if (var->numb == var->quant)
 	{
+		tputs(restore_cursor, 1, ft_putchar);
+		tputs(tgetstr("ce", 0), 1, ft_putchar); //delete line
 		write(1, (*list_struct)->temp, ft_strlen((*list_struct)->temp));
-		tputs(restore_cursor, 1, ft_putchar);
-		tputs(tgetstr("ce", 0), 1, ft_putchar); //delete line
 	}
-	else if (var->numb != 0)
+	else
 	{
+		// write(1, "YA\n", 3);
 		tputs(restore_cursor, 1, ft_putchar);
 		tputs(tgetstr("ce", 0), 1, ft_putchar); //delete line
-		if ((hist)->changes[0] != '\0')
-			write(1, (hist)->changes, ft_strlen((hist)->changes));
-		else
-			write(1, (hist)->temp, ft_strlen((hist)->temp));
+		write(1, (hist)->changes, ft_strlen((hist)->changes));
 	}
 }

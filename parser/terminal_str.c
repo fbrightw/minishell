@@ -5,31 +5,40 @@ t_history	*exact_list(t_list *history, t_var *var)
 	int count;
 
 	count = 0;
-	t_history *exact_l;
+	t_history *exact_l = NULL;
 
 	while (count < (var->numb) - 1)
 	{
 		history = history->next;
 		count++;
 	}
-	exact_l = ((t_history*)(history->content));
+	if (history != NULL)
+	{
+		if (history->content)
+			exact_l = ((t_history*)(history->content));
+	}
 	return (exact_l);
 }
 
-void	strings(t_list **history, t_var *var,  t_history **hist)
+void	strings(t_list **history, t_var *var,  t_history **list_struct)
 {
 	int l;
 
-	l = read(0, var->str, 100);
+	l = read(0, var->str, 4); //close l
 	var->str[l] = '\0';
 	if (!strcmp(var->str, "\e[A"))
-		up(history, var, hist);
+		up(history, var, list_struct);
 	else if (!strcmp(var->str, "\e[B"))
-		down(history, var, hist);
+		down(history, var, list_struct);
 	else if (*(var->str) == 127)
-		backsp(history, var, hist);
+		backsp(history, var, list_struct);
 	else
-		word(history, var, hist);
+	{
+		if (ft_isprint(*(var->str)))
+			word(history, var, list_struct);
+		else
+			write(1, "\n", 1);
+	}
 }
 
 void	termcaps(struct termios term, t_var *var, t_all *main_struct)
@@ -45,33 +54,6 @@ void	termcaps(struct termios term, t_var *var, t_all *main_struct)
 	free(var->term_name);
 }
 
-void	return_value(t_list **history, t_var *var, int numb)
-{
-	int i;
-	char *change;
-	char *temp;
-
-	i = 0;
-	while (i < numb)
-	{
-		*history = (*history)->next;
-		change = ((t_history *)(*history)->content)->changes;
-		temp = ((t_history *)(*history)->content)->temp;
-		change = ft_strdup(temp);
-		i++;
-	}
-	i++;
-	*history = (*history)->next;
-	while (i < var->quant)
-	{
-		*history = (*history)->next;
-		change = ((t_history *)(*history)->content)->changes;
-		temp = ((t_history *)(*history)->content)->temp;
-		change = ft_strdup(temp);
-		i++;
-	}
-}
-
 void	get_exact_str(t_list *history, t_history **list_struct, int numb)
 {
 	int count;
@@ -85,7 +67,7 @@ void	get_exact_str(t_list *history, t_history **list_struct, int numb)
 	}
 	exact_l = (t_history*)(history->content);
 	(*list_struct)->temp = ft_strdup(exact_l->changes);
-	(*list_struct)->changes = ft_strdup((*list_struct)->temp);
+	(*list_struct)->changes = ft_strdup(exact_l->changes);
 }
 
 void	prev_hist(t_list *history, t_var *var)
@@ -93,19 +75,91 @@ void	prev_hist(t_list *history, t_var *var)
 	int i;
 
 	i = 0;
-	while (i < var->numb)
+	while (i < var->numb - 1)
 	{
+		printf("%s\n", ((t_history*)(history)->content)->temp);
 		((t_history*)(history)->content)->changes = ((t_history*)(history)->content)->temp;
 		history = history->next;
 		i++;
 	}
 	i++;
-	while (i < var->quant)
+	while (i < var->quant - 1)
 	{
 		((t_history*)(history)->content)->changes = ((t_history*)(history)->content)->temp;
 		(history) = (history)->next;
 		i++;
 	}
+}
+
+void	print(t_list **history)
+{
+	printf("\nQUANTITY\n");
+	t_list *iter = *history;
+	while (iter)
+	{
+		printf("%s\n", ((t_history*)(iter->content))->changes = ft_strdup(((t_history*)(iter->content))->temp));
+		iter = iter->next;
+	}
+}
+
+char	*not_from_history(t_list **history,t_var *var, t_history **list_struct)
+{
+	if ((*list_struct)->temp[0] != '\0')
+	{
+		(*list_struct)->changes = ft_strdup((*list_struct)->temp); // change = temp = qwe
+		ft_lstadd_back(history, ft_lstnew(*list_struct));
+		t_list *iter = *history;
+		while (iter)
+		{
+			if (strcmp(((t_history*)((iter)->content))->changes, ((t_history*)((iter)->content))->temp))
+			{
+				free(((t_history*)(iter->content))->changes);
+				((t_history*)(iter->content))->changes = ft_strdup(((t_history*)(iter->content))->temp);
+			}
+			iter = iter->next;
+		}
+		// print(history);
+		return((*list_struct)->temp);
+	}
+	// print(history);
+	free((*list_struct));
+	return (NULL);
+}
+
+char	*from_history(t_list **history,t_var *var, t_history **list_struct)
+{
+	if (exact_list(*history, var)->changes[0] != '\0')
+	{
+		free((*list_struct)->temp);
+		(*list_struct)->temp = ft_strdup(exact_list(*history, var)->changes);
+		(*list_struct)->changes = ft_strdup(exact_list(*history, var)->changes);
+		if ((*list_struct)->temp[0] != '\0')
+		{
+			t_list *iter = *history;
+			while (iter)
+			{
+				if (((t_history*)(iter->content))->changes && strcmp(((t_history*)((iter)->content))->changes, ((t_history*)((iter)->content))->temp))
+				{
+					free(((t_history*)(iter->content))->changes);
+					((t_history*)(iter->content))->changes = ft_strdup(((t_history*)(iter->content))->temp);
+				}
+				iter = iter->next;
+			}
+			ft_lstadd_back(history, ft_lstnew(*list_struct));
+			// print(history);
+			return((*list_struct)->changes);
+		}
+		return (NULL);
+	}
+	else
+	{
+		free(exact_list(*history, var)->changes);
+		exact_list(*history, var)->changes = ft_strdup(exact_list(*history, var)->temp);
+		free(*list_struct);
+		free((*list_struct)->temp);
+		return (NULL);
+	}
+	// print(history);
 }
 
 char	*save_history_in_lists(t_list **history, t_all *main_struct, t_var *var)
@@ -117,7 +171,7 @@ char	*save_history_in_lists(t_list **history, t_all *main_struct, t_var *var)
 
 	list_struct = malloc(sizeof(t_history));
 	list_struct->temp = malloc(sizeof(char));
-	list_struct->changes = NULL;
+	list_struct->changes =  NULL;
 	list_struct->temp[0] = '\0';
 
 	// termcaps
@@ -131,33 +185,7 @@ char	*save_history_in_lists(t_list **history, t_all *main_struct, t_var *var)
 		strings(history, var, &list_struct);
 
 	if (var->numb == var->quant)
-	{
-		if (list_struct->temp[0] != '\0')
-		{
-			list_struct->changes = ft_strdup(list_struct->temp);
-			ft_lstadd_back(history, ft_lstnew(list_struct));
-			prev_hist(*history, var);
-			// t_list *iter = *history;
-			// while (iter)
-			// {
-			// 	printf("%s\n", ((t_history*)(iter->content))->changes);
-			// 	iter = iter->next;
-			// }
-			return(list_struct->temp);
-		}
-	}
-	else if (var->numb != 0)
-	{
-		if (exact_list(*history, var)->changes[0] != '\0')
-		{
-			get_exact_str(*history, &list_struct, var->numb);
-			if (list_struct->temp[0] != '\0')
-			{
-				prev_hist(*history, var);
-				ft_lstadd_back(history, ft_lstnew(list_struct));
-				return(list_struct->changes);
-			}
-		}
-		return (list_struct->temp);
-	}
+		return(not_from_history(history, var, &list_struct));
+	else
+		return(from_history(history, var, &list_struct));
 }
