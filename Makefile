@@ -12,14 +12,12 @@ SRCS_DIR =	./parser/
 
 FILES	=	terminal_str.c, splitting_str.c, lexers.c
 
-
 # SRCS	=	$(addprefix $(SRCS_DIR), $(FILES))
-SRCS	:=	parser/terminal_str.c parser/actions.c parser/splitting_str.c parser/lexers.c parser/utils/check_words.c \
-			parser/utils/analysis_spec_symb.c
+SRCS	:=	parser/terminal_str.c parser/actions.c parser/splitting_str.c parser/from_parser_to_execute.c parser/spec_symbols.c \
+			parser/utils/analysis_spec_symb.c parser/utils/additional_for_termcaps.c parser/utils/finding_pipes.c
 
-SRCS	+= 	${wildcard execution/builtins/*.c} ${wildcard execution/work_it/*.c}
+SRCS	+= 	${wildcard execution/builtins/*.c} ${wildcard execution/work_it/*.c} execution/pipes/other_command.c execution/pipes/handle_pipes.c
 
-# OBJS   :=    $(SRCS:%.c=$(OBJS)/%.o)
 OBJS	:=	$(SRCS:.c=.o)
 
 RM	=	rm	-f

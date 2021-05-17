@@ -1,13 +1,9 @@
 #include "../includes/minishell.h"
 
-// buf = "ls -al | pwd ; echo "PATH" fg"
-// needed result : ["ls" "-al" "|" "pwd" ] -> ["echo" "PATH"]
-
 char	**alloc_mem_for_word(char **com, int k, char *fin_str)
 {
 	char	**new_com;
 	int		i;
-	int		l1;
 
 	i = 0;
 	new_com = (char**)malloc(sizeof(char*) * (k + 1));
@@ -42,7 +38,22 @@ void	word_with_spec_symbols(char **final_str, char **term_str, char *ch)
 	(*term_str)++;
 }
 
-void	find_coms_args(t_list **com_in_str, char **term_str)
+void	add_word(t_into_lists *vars, char **term_str, char **final_str, int *k)
+{
+	if (*final_str)
+	{
+		if (check_if_pipe(*final_str))
+			ft_split_pipes(vars, *final_str, '|', k);
+		else
+			vars->args = alloc_mem_for_word(vars->args, *k, *final_str); // новая память ( старое кол-во слов + новое слово)
+	}
+	while (**term_str == ' ')
+		(*term_str)++;
+	*k += 1;
+	*final_str = NULL;
+}
+
+void	find_cmds_args(t_list **com_in_str, char **term_str, t_all *main_struct, t_var *var)
 {
 	char temp[2];
 	char *final_str = NULL;
@@ -55,17 +66,11 @@ void	find_coms_args(t_list **com_in_str, char **term_str)
 	vars->args = (char**)malloc(sizeof(char*));
 	vars->args[0] = NULL;
 	temp[1] = '\0';
-	// двумерный массив состоящий из n строк, где n - количество слов до |, ;, <>
+
 	while (**term_str && !ft_strchr(";", **term_str))
 	{
 		if (**term_str == ' ')
-		{
-			vars->args = alloc_mem_for_word(vars->args, k, final_str); // новая память ( старое кол-во слов + новое слово)
-			while (**term_str == ' ')
-				(*term_str)++;
-			k += 1;
-			final_str = NULL;
-		}
+			add_word(vars, term_str, &final_str, &k);
 		else if (ft_strchr("\'\"$<>?", **term_str))
 			word_with_spec_symbols(&final_str, term_str, ft_strchr("\'\"$<>?", **term_str));
 		else
@@ -78,88 +83,63 @@ void	find_coms_args(t_list **com_in_str, char **term_str)
 	if (final_str)
 	{
 		k += 1;
-		vars->args = alloc_mem_for_word(vars->args, k, final_str);
+		if (check_if_pipe(final_str))
+			ft_split_pipes(vars, final_str, '|', &k);
+		else
+			vars->args = alloc_mem_for_word(vars->args, k, final_str);
+	}
+	while (vars->args[i])
+	{
+		if (symbols("\'\"\\$", vars->args[i]))
+			vars->args[i] = deal_with_spec_smbls(*com_in_str, main_struct, var, vars->args[i]);
+		i++;
 	}
 	ft_lstadd_back(com_in_str, ft_lstnew(vars)); //течет
 }
 
-int	is_it_b(char *token, t_var *var)
-{
-	int i;
-	int j;
-	int k;
-
-	i = -1;
-	j = 0;
-	while (var->builtins[j])
-	{
-		k = 0;
-		i = 0;
-		while (token[i] && (token[i] == ft_toupper((var->builtins[j])[k]) || token[i] == ((var->builtins[j])[k])))
-		{
-			i++;
-			k++;
-		}
-		if (!(token[i]) && !(var->builtins[j][k]))
-			return (1);
-		j++;
-	}
-	return (0);
-}
-
-void	func(t_list *com_in_str,  t_all *main_struct, t_var	*var)
-{
-	char *token;
-	// printf("%d\n", ft_lstsize(com_in_str));
-	while (com_in_str)
-	{
-		char **str = ((t_into_lists *)(com_in_str->content))->args;
-		// printf("%s\n", str[0]);
-		token = is_it_com(com_in_str, main_struct, var, str[0]);
-		printf("%s\n", token);
-		if (token)
-		{
-			if (is_it_b(token, var))
-				printf("\nYES\n");
-			else
-				printf("NO\n");
-		}
-		com_in_str = com_in_str->next;
-	}
-}
-
-void	split_into_commands(char *term_str, t_all *main_struct, t_var	*var)
+void	split_into_commands(char *term_str, t_all *main_struct, t_var *var)
 {
 	t_list *com_in_str;
+	int pipe_amount;
 	int i;
 
 	i = 0;
 	com_in_str = NULL;
+	pipe_amount = 0;
 	printf("str splitting = %s\n", term_str);
 	while (*term_str)
 	{
-		printf("%s\n", term_str);
 		if (!ft_strchr(";", *term_str)) // not |;<>
 		{
 			while (*term_str == ' ')
 				term_str++;
-			find_coms_args(&com_in_str, &term_str);
+			find_cmds_args(&com_in_str, &term_str, main_struct, var);
 		}
 		else
 			term_str++;
 	}
 	// we need to check what it is in array and then send into built ins functions
 	// wrote function that checks that it is built-in(skips spec symbols)
-	func(com_in_str, main_struct, var);
 
-	// send to the rvinnie part (execute commands)
-	// while (ft_lstsize_n(com_in_str))
-	// {
-	// 	// printf("%s\n", com_in_str->args[0]);
-	// 	// разделить по пайпам;
-	// 	// if (!isItBuiltin(main_struct, com_in_str->args)) //передаю массив, состоящий из команд + аргс (лист до ;)
-	// 		// find_command()
-	// 	is_it_builtin(main_struct, com_in_str->args);
-	// 	com_in_str = com_in_str->next;
-	// }
+	// what we have in array
+	printf("---------------WHAT WE HAVE IN ARRAY------------------\n");
+	while (com_in_str)
+	{
+		i = 0;
+		char **array =  ((t_into_lists *)(com_in_str->content))->args;
+		// printf("\n");
+		while (array[i])
+		{
+			printf("%s\n ", array[i]);
+			i++;
+		}
+		com_in_str = com_in_str->next;
+	}
+
+	// count_pipes(com_in_str, &pipe_amount); //не учитывала что может быть |wc-c (слитно со сл командой)
+	// printf("pipe amount = %d\n", pipe_amount);
+	// if (!pipe_amount)
+	// 	func(com_in_str, main_struct, var); // checking for built-in or other commands
+	// else
+	// 	pipes(com_in_str, pipe_amount);
 }

@@ -16,5 +16,5 @@ void	ft_echo(char *str, int flag_n)
 {
 	write(1, str, ft_strlen(str));
 	if (!flag_n)
-		write(1, "\n", 1);
+		write(1, " ", 1);
 }
