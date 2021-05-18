@@ -51,23 +51,17 @@ int	is_it_b(char *token, t_var *var)
 	return (0);
 }
 
-void	func(t_list *com_in_str,  t_all *main_struct, t_var	*var)
+void	func(t_list *com_in_str, t_all *main_struct, t_var	*var, char *token)
 {
-	char *token;
-	while (com_in_str)
+	if (token)
 	{
-		token= ((t_into_lists *)(com_in_str->content))->args[0];
-		if (token)
+		if (is_it_b(token, var))
+			printf("\nYES, built in\n");
+		else
 		{
-			if (is_it_b(token, var))
-				printf("\nYES, built in\n");
-			else
-			{
-				char **args = ((t_into_lists*)(com_in_str->content))->args;
-				other_command(args, token, main_struct);
-				// printf("NO, just something else\n");
-			}
+			char **args = ((t_into_lists*)(com_in_str->content))->args;
+			other_command(args, token, main_struct);
+			// printf("NO, just something else\n");
 		}
-		com_in_str = com_in_str->next;
 	}
 }

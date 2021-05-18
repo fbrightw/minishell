@@ -15,10 +15,15 @@
 
 #include "../execution/builtins/builtins.h"
 
+
+#define STDOUT
+#define STDIN
+
 typedef struct		s_all
 {
 	char			**args;
 	char			**env;
+	int				std_fd[2];
 	t_env			envs;
 }					t_all;
 
@@ -31,24 +36,19 @@ typedef	struct		s_history
 
 typedef	struct		s_into_lists
 {
-	// char			**before_changes;
 	char			**args;
-	// char			*status;
+	char			*pipes;
+	char			*redirs;
 }					t_into_lists;
 
 typedef	struct		s_var
 {
-	char			*term_str;
 	char			*term_name;
 	int				numb;
 	int				quant;
 	char			str[200];
 	char 			temp[2];
-	int				d_quot;
-	int				quot;
-	char			*temporary;
 	char 			**builtins;
-	char			*origin_com;
 
 }					t_var;
 
@@ -83,12 +83,18 @@ void	quit_error(char *str);
 void	building_word(char **str1, char *str2);
 void	backslash(char **word, char **command, t_var *var);
 
-int	check_if_pipe(char *final_str);
+void	indexes_of_pipe_red(t_into_lists *vars);
+
+
+int		check_if_pipe(char *final_str);
+void	str_with_pipes(t_all *main_struct, t_list *com_in_str, int pipe_amount);
 void	count_pipes(t_list *com_in_str, int *pipe_amount);
 void	ft_split_pipes(t_into_lists *vars, char *final_str, char c, int *k);
 
-
+void	func(t_list *com_in_str, t_all *main_struct, t_var	*var, char *token);
 void	other_command(char **args, char *token, t_all *main_struct);
-void	str_with_pipes(t_list *com_in_str, int pipe_amount);
+// void	str_with_pipes(t_list *com_in_str, int pipe_amount);
 
+
+void	redirs(t_list *com_in_str, t_into_lists *vars, t_all *main_struct, t_var *var);
 #endif

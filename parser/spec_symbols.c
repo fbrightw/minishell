@@ -20,7 +20,7 @@ void	backslash_in_double(char **word, char **command, t_var *var)
 
 void	double_quotes(char **word, t_var *var, t_all *main_struct, char **command)
 {
-	var->quot++;
+	// var->quot++;
 	while (**word && **word != '\"')
 	{
 		if (**word == '$')
@@ -35,8 +35,6 @@ void	double_quotes(char **word, t_var *var, t_all *main_struct, char **command)
 				(*word)++;
 			}
 		}
-		else if (**word == '\"')
-			var->quot++;
 		else
 		{
 			var->temp[0] = **word;

@@ -1,5 +1,64 @@
 #include "../../includes/minishell.h"
 
+void	indexes_of_pipe_red(t_into_lists *vars)
+{
+	int i;
+	int q_pipes;
+	int q_red;
+	char *redir[3] = {">", "<", ">>"};
+
+	i = 0;
+	q_pipes = 0;
+	q_pipes = 0;
+	while (vars->args[i])
+	{
+		if (vars->args[i][0] == '|')
+			q_pipes++;
+		while (**redir)
+		{
+			if (symbols(*redir, vars->args[i]))
+				q_red++;
+			else
+				(*redir)++;
+		}
+		i++;
+	}
+	if (q_red != 0)
+	{
+		vars->redirs = malloc(sizeof(int)* (q_red + 1));
+		vars->redirs[q_red] = '\0';
+	}
+	if (q_pipes != 0)
+	{
+		vars->pipes = malloc(sizeof(int)* (q_pipes + 1));
+		vars->pipes[q_pipes] = '\0';
+	}
+
+	i -= 1;
+	q_pipes -= 1;
+	q_red -= 1;
+	// printf("%d %d\n", q_red, q_pipes);
+	while (vars->args[i] && (q_pipes > 0 || q_red > 0))
+	{
+		if (vars->args[i][0] == '|')
+		{
+			vars->pipes[q_pipes] = i;
+			q_pipes--;
+		}
+		while (**redir) // что-то из редир
+		{
+			if (symbols(*redir, vars->args[i]))
+			{
+				vars->redirs[q_red] = i;
+				q_red--;
+			}
+			else
+				(*redir)++;
+		}
+		i--;
+	}
+}
+
 int	check_if_pipe(char *final_str)
 {
 	if (!find_exact_symb(final_str, '|'))

@@ -65,6 +65,8 @@ void	find_cmds_args(t_list **com_in_str, char **term_str, t_all *main_struct, t_
 	i = 0;
 	vars->args = (char**)malloc(sizeof(char*));
 	vars->args[0] = NULL;
+	vars->redirs = NULL;
+	vars->pipes = NULL;
 	temp[1] = '\0';
 
 	while (**term_str && !ft_strchr(";", **term_str))
@@ -94,7 +96,22 @@ void	find_cmds_args(t_list **com_in_str, char **term_str, t_all *main_struct, t_
 			vars->args[i] = deal_with_spec_smbls(*com_in_str, main_struct, var, vars->args[i]);
 		i++;
 	}
+
+	// find indexes of redirections and pipes if they exist;
+	indexes_of_pipe_red(vars);
 	ft_lstadd_back(com_in_str, ft_lstnew(vars)); //течет
+	if (!vars->pipes && !vars->redirs)
+	{
+		t_list *iter = *com_in_str;
+		while (iter)
+		{
+			char *token = ((t_into_lists *)(iter->content))->args[0];
+			func(iter, main_struct, var, token);
+			iter = iter->next;
+		}
+	}
+	else if (!vars->pipes)
+		redirs(*com_in_str, vars, main_struct, var);
 }
 
 void	split_into_commands(char *term_str, t_all *main_struct, t_var *var)
@@ -118,28 +135,26 @@ void	split_into_commands(char *term_str, t_all *main_struct, t_var *var)
 		else
 			term_str++;
 	}
-	// we need to check what it is in array and then send into built ins functions
-	// wrote function that checks that it is built-in(skips spec symbols)
 
-	// what we have in array
-	printf("---------------WHAT WE HAVE IN ARRAY------------------\n");
-	while (com_in_str)
-	{
-		i = 0;
-		char **array =  ((t_into_lists *)(com_in_str->content))->args;
-		// printf("\n");
-		while (array[i])
-		{
-			printf("%s\n ", array[i]);
-			i++;
-		}
-		com_in_str = com_in_str->next;
-	}
+	// printf("---------------WHAT WE HAVE IN ARRAY------------------\n");
+	// while (com_in_str)
+	// {
+	// 	i = 0;
+	// 	char **array =  ((t_into_lists *)(com_in_str->content))->args;
+	// 	// printf("\n");
+	// 	while (array[i])
+	// 	{
+	// 		printf("%s\n ", array[i]);
+	// 		i++;
+	// 	}
+	// 	com_in_str = com_in_str->next;
+	// }
+	// printf("------------------------------------------------------\n");
 
 	// count_pipes(com_in_str, &pipe_amount); //не учитывала что может быть |wc-c (слитно со сл командой)
-	// printf("pipe amount = %d\n", pipe_amount);
+	// // printf("pipe amount = %d\n", pipe_amount);
 	// if (!pipe_amount)
 	// 	func(com_in_str, main_struct, var); // checking for built-in or other commands
 	// else
-	// 	pipes(com_in_str, pipe_amount);
+	// 	str_with_pipes(main_struct, com_in_str, pipe_amount);
 }
