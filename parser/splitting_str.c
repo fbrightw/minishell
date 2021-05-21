@@ -38,14 +38,18 @@ void	word_with_spec_symbols(char **final_str, char **term_str, char *ch)
 	(*term_str)++;
 }
 
-void	add_word(t_into_lists *vars, char **term_str, char **final_str, int *k)
+void	add_word(t_var *var, char **term_str, char **final_str, int *k)
 {
+	char *type;
+
 	if (*final_str)
 	{
 		if (check_if_pipe(*final_str))
-			ft_split_pipes(vars, *final_str, '|', k);
+			ft_split_pipes(var, *final_str, '|', k);
+		else if (check_if_redir(var, *final_str, k))
+			split_by_redirs(var, *final_str, k);
 		else
-			vars->args = alloc_mem_for_word(vars->args, *k, *final_str); // новая память ( старое кол-во слов + новое слово)
+			var->words = alloc_mem_for_word(var->words, *k, *final_str); // новая память ( старое кол-во слов + новое слово)
 	}
 	while (**term_str == ' ')
 		(*term_str)++;
@@ -53,32 +57,21 @@ void	add_word(t_into_lists *vars, char **term_str, char **final_str, int *k)
 	*final_str = NULL;
 }
 
-void	find_cmds_args(t_list **com_in_str, char **term_str, t_all *main_struct, t_var *var)
+void	delete_by_semicolon(char **term_str, t_var *var, int *k)
 {
-	char temp[2];
-	char *final_str = NULL;
-	int k;
-	int i;
-	t_into_lists *vars = malloc(sizeof(t_into_lists));
+	char *final_str;
 
-	k = 1;
-	i = 0;
-	vars->args = (char**)malloc(sizeof(char*));
-	vars->args[0] = NULL;
-	vars->redirs = NULL;
-	vars->pipes = NULL;
-	temp[1] = '\0';
-
+	final_str = NULL;
 	while (**term_str && !ft_strchr(";", **term_str))
 	{
 		if (**term_str == ' ')
-			add_word(vars, term_str, &final_str, &k);
-		else if (ft_strchr("\'\"$<>?", **term_str))
+			add_word(var, term_str, &final_str, k);
+		else if (ft_strchr("\'\"$?", **term_str))
 			word_with_spec_symbols(&final_str, term_str, ft_strchr("\'\"$<>?", **term_str));
 		else
 		{
-			temp[0] = **term_str;
-			building_word(&final_str, temp);
+			var->temp[0] = **term_str;
+			building_word(&final_str, var->temp);
 			(*term_str)++;
 		}
 	}
@@ -86,44 +79,46 @@ void	find_cmds_args(t_list **com_in_str, char **term_str, t_all *main_struct, t_
 	{
 		k += 1;
 		if (check_if_pipe(final_str))
-			ft_split_pipes(vars, final_str, '|', &k);
+			ft_split_pipes(var, final_str, '|', k);
+		else if (check_if_redir(var, final_str, k))
+			split_by_redirs(var, final_str, k);
 		else
-			vars->args = alloc_mem_for_word(vars->args, k, final_str);
+			var->words = alloc_mem_for_word(var->words, *k, final_str);
 	}
-	while (vars->args[i])
+}
+
+void	find_cmds_args(t_list **com_in_str, char **term_str, t_all *main_struct, t_var *var)
+{
+	t_list	*inner_list;
+	int k;
+	int i;
+
+	var->words = (char**)malloc(sizeof(char*));
+	var->words[0] = NULL;
+	var->temp[1] = '\0';
+	k = 1;
+	i = 0;
+
+	delete_by_semicolon(term_str, var, &k);
+	while (var->words[i])
 	{
-		if (symbols("\'\"\\$", vars->args[i]))
-			vars->args[i] = deal_with_spec_smbls(*com_in_str, main_struct, var, vars->args[i]);
+		if (symbols("\'\"\\$", var->words[i]))
+			var->words[i] = deal_with_spec_smbls(*com_in_str, main_struct, var, var->words[i]);
 		i++;
 	}
-
-	// find indexes of redirections and pipes if they exist;
-	indexes_of_pipe_red(vars);
-	ft_lstadd_back(com_in_str, ft_lstnew(vars)); //течет
-	if (!vars->pipes && !vars->redirs)
-	{
-		t_list *iter = *com_in_str;
-		while (iter)
-		{
-			char *token = ((t_into_lists *)(iter->content))->args[0];
-			func(iter, main_struct, var, token);
-			iter = iter->next;
-		}
-	}
-	else if (!vars->pipes)
-		redirs(*com_in_str, vars, main_struct, var);
+	inner_list = NULL;
+	divide_big_list(&inner_list, var, k);
+	ft_lstadd_back(com_in_str, ft_lstnew(inner_list)); //течет
 }
 
 void	split_into_commands(char *term_str, t_all *main_struct, t_var *var)
 {
 	t_list *com_in_str;
-	int pipe_amount;
 	int i;
 
 	i = 0;
 	com_in_str = NULL;
-	pipe_amount = 0;
-	printf("str splitting = %s\n", term_str);
+	var->pipe_amount = 0;
 	while (*term_str)
 	{
 		if (!ft_strchr(";", *term_str)) // not |;<>
@@ -139,22 +134,38 @@ void	split_into_commands(char *term_str, t_all *main_struct, t_var *var)
 	// printf("---------------WHAT WE HAVE IN ARRAY------------------\n");
 	// while (com_in_str)
 	// {
-	// 	i = 0;
-	// 	char **array =  ((t_into_lists *)(com_in_str->content))->args;
-	// 	// printf("\n");
-	// 	while (array[i])
+	// 	t_list *iner = (t_list*)(com_in_str->content);
+	// 	while (iner)
 	// 	{
-	// 		printf("%s\n ", array[i]);
-	// 		i++;
+	// 		int j = 0;
+	// 		char **array = ((t_in_list*)(iner->content))->args;
+	// 		while (array[j])
+	// 		{
+	// 			printf("%s\n", array[j]);
+	// 			j++;
+	// 		}
+	// 		iner = iner->next;
 	// 	}
 	// 	com_in_str = com_in_str->next;
 	// }
 	// printf("------------------------------------------------------\n");
 
-	// count_pipes(com_in_str, &pipe_amount); //не учитывала что может быть |wc-c (слитно со сл командой)
-	// // printf("pipe amount = %d\n", pipe_amount);
-	// if (!pipe_amount)
-	// 	func(com_in_str, main_struct, var); // checking for built-in or other commands
-	// else
-	// 	str_with_pipes(main_struct, com_in_str, pipe_amount);
+	while (com_in_str)
+	{
+		t_list *iner = (t_list*)(com_in_str->content);
+		if (ft_lstsize(iner) == 1)
+		{
+			int j = 0;
+			char **array = ((t_in_list*)(iner->content))->args;
+			if (array[0])
+				var->token = ft_strdup(array[0]);
+			func(com_in_str, main_struct, var); // checking for built-in or other commands
+		}
+		// there are pipes
+		// else
+		// {
+
+		// }
+		com_in_str = com_in_str->next;
+	}
 }

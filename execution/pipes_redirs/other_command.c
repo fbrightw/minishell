@@ -33,7 +33,13 @@ char 	*find_path(char **env, char *act_path)
 	}
 }
 
-void	child_work(t_all *main_struct, char **args, char *path, char *token)
+void	putting_fd(t_all *main_struct)
+{
+	dup2(main_struct->std_fd[1], 1);
+	close(1);
+}
+
+void	child_work(t_all *main_struct, t_list *inner, char **args, char *token)
 {
 	char **array_of_path;
 	char *temp;
@@ -42,12 +48,17 @@ void	child_work(t_all *main_struct, char **args, char *path, char *token)
 	char to_token[ft_strlen(token)+ 2];
 	to_token[0] = '/';
 	i = 0;
+
+	// merge token and path
+	char **env = main_struct->env;
+	char *path = find_path(env, "PATH");
 	while (token[i])
 	{
 		to_token[i+1] = token[i];
 		i++;
 	}
 	to_token[i+1] = '\0';
+
 	i = 0;
 	if (path)
 	{
@@ -56,11 +67,13 @@ void	child_work(t_all *main_struct, char **args, char *path, char *token)
 		{
 			path = ft_strdup(array_of_path[i]);
 			path = ft_strjoin(path, to_token);
-			// printf("%s\n", path);
-			if (execve(path, args, main_struct->env) == -1)
-				i++;
-			else
-				exit(0);
+			check_work_redirs(inner, main_struct);
+			{
+				if (execve(path, args, main_struct->env) == -1)
+					i++;
+				else
+					exit(0);
+			}
 		}
 		write(1, "Didn't find in path\n", 21);
 		exit(0);
@@ -69,21 +82,18 @@ void	child_work(t_all *main_struct, char **args, char *path, char *token)
 		write(1, "error\n", 7);
 }
 
-void	other_command(char **args, char *token, t_all *main_struct)
+void	other_command( t_all *main_struct, t_list *inner, char **args, char *token)
 {
 	char **env;
 
 	char *path;
 	char *temp;
-	int i;
 
-	i = 0;
-	env = main_struct->env;
-	path = find_path(env, "PATH");
-	// printf("%s\n", path);
+	// env = main_struct->env;
+	// path = find_path(env, "PATH");
 	pid_t pid = fork(); // create a child;
 	// we are in child proccess
 	if (pid == 0)
-		child_work(main_struct, args, path, token);
+		child_work(main_struct, inner, args, token);
 	pid_t pid1 = wait3(&pid, 0, 0);
 }

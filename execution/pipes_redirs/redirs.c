@@ -1,50 +1,35 @@
 #include "../../includes/minishell.h"
 
-void	redir_output(t_into_lists *vars, t_all *main_struct, char *args)
+int	redir_outputs(t_all *main_struct, char *file, char *type)
 {
-	close(main_struct->std_fd[1]);
-	main_struct->std_fd[1] = open(args, O_CREAT | O_WRONLY | O_TRUNC);
-	// if (main_struct->std_fd[1] == -1)
-	// {
-		// ERROR
-	// }
-	// dup2(main_struct->std_fd[1], STDOUT);
-}
-
-void	redir_input(t_into_lists *vars, t_all *main_struct, char **args, char *redir)
-{
-	close(main_struct->std_fd[0]);
-	if (strcmp(redir, "INPUT"))
-		main_struct->std_fd[0] = open(args, O_CREAT | O_WRONLY | O_TRUNC);
+	// close(STDOUT);
+		// printf("%s\n", file);
+	if (!strcmp(type, "OUTPUT"))
+		main_struct->file_fd = open(file, O_CREAT | O_WRONLY | O_TRUNC, 0777);
 	else
-		main_struct->std_fd[0] = open(args, O_CREAT | O_WRONLY | O_APPEND);
+	{
+		printf("file %s\n", file);
+		main_struct->file_fd = open(file, O_CREAT | O_WRONLY | O_APPEND, 0777);
+	}
+
+	// printf("%d\n", main_struct->std_fd[1]);
 	// if (main_struct->std_fd[1] == -1)
 	// {
 		// ERROR
 	// }
-	// dup2(main_struct->std_fd[0], STDIN);
+	main_struct->std_fd[1] = dup2(main_struct->file_fd, STDOUT);
+	close(main_struct->file_fd);
+	return (1);
 }
 
-void	redirs(t_list *com_in_str, t_into_lists *vars, t_all *main_struct, t_var *var)
+void	redir_input(t_all *main_struct, char *file)
 {
-	int index;
-	int i;
-	int j;
-
-	i = 0;
-	j = 0;
-	main_struct->std_fd[0] = 0; //stdin
-	main_struct->std_fd[1] = 1; //stdout
-	while (vars->redirs[i])
-	{
-		func(com_in_str, main_struct, var, vars->args[j]);
-		index = vars->redirs[i];
-		if (strcmp(vars->args[index], ">"))
-			redir_output(vars, main_struct, (*(vars->args) + index + 1));
-		else if (strcmp(vars->args[index], "<")) // input
-			redir_input(vars, main_struct, (*(vars->args) + index + 1), "INPUT");
-		else
-			redir_input(vars, main_struct, (*(vars->args) + index + 1), "APP_INPUT");
-		j += index + 1;
-	}
+	// close(main_struct->std_fd[0]); //close stdin
+	main_struct->file_fd = open(file, O_RDONLY);
+	// if (main_struct->std_fd[1] == -1)
+	// {
+		// ERROR
+	// }
+	main_struct->std_fd[0] = dup2(main_struct->file_fd, STDIN);
+	close(main_struct->file_fd);
 }

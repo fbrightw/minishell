@@ -15,15 +15,33 @@
 
 #include "../execution/builtins/builtins.h"
 
+#define STDOUT 1
+#define STDIN 0
 
-#define STDOUT
-#define STDIN
+#define INPUT '<'
+#define OUTPUT '>'
+#define APP_OUTPUT ">>"
+
+typedef struct		s_reds
+{
+	char			*redir;
+	int				type; //0 - in, 1, 2 - app_out, -1
+
+}					t_reds;
+
+typedef struct s_in_list
+{
+	char			**args;
+	int				pipe_numb;
+	t_list			*redirs;
+}				t_in_list;
 
 typedef struct		s_all
 {
 	char			**args;
 	char			**env;
 	int				std_fd[2];
+	int				file_fd;
 	t_env			envs;
 }					t_all;
 
@@ -34,22 +52,19 @@ typedef	struct		s_history
 	char			*temp;
 }					t_history;
 
-typedef	struct		s_into_lists
-{
-	char			**args;
-	char			*pipes;
-	char			*redirs;
-}					t_into_lists;
-
 typedef	struct		s_var
 {
 	char			*term_name;
+	char			*token;
+	int				pipe_amount;
 	int				numb;
 	int				quant;
 	char			str[200];
 	char 			temp[2];
+	char			*word;
+	char			**words;
 	char 			**builtins;
-
+	t_list			*redirs;
 }					t_var;
 
 // #include "../execution/work_it/analysis.h"
@@ -65,11 +80,21 @@ void	split_into_commands(char *term_str, t_all *main_struct, t_var	*var);
 char	**alloc_mem_for_word(char **com, int k, char *fin_str);
 char	**spec_symbols(t_all *main_struct, char **com, char **buf, int k);
 char	*find_variable_in_env(t_all *main_struct, char *varible, int fl_to_free);
-char	*deal_with_spec_smbls(t_list *com_in_str, t_all *main_struct, t_var *var, char *word);
 
 t_history	*exact_list(t_list *history, t_var *var);
 void	get_exact_str(t_list *history, t_history **list_struct, int numb);
 void	prev_hist(t_list *history, t_var *var);
+
+// splitting by pipes
+void	divide_big_list(t_list **inner_list, t_var *var, int words_q);
+// void	put_input(t_in_list *in_inner, t_var *var, int *index, int *j);
+void	put_accord_redir(t_in_list *in_inner, t_var *var, int *j, int *index);
+
+// skipping redirs
+void	split_by_redirs(t_var *var, char *word, int *k);
+int		check_if_redir(t_var *var, char *word, int *k);
+void	input(t_var *var, char **into_array, int *k, int *i);
+void	output_types(t_var *var, int *i, char **into_array, int *k);
 
 // анализ спец символов
 // int		cmp_to_symb(char *symbols, char c);
@@ -83,18 +108,13 @@ void	quit_error(char *str);
 void	building_word(char **str1, char *str2);
 void	backslash(char **word, char **command, t_var *var);
 
-void	indexes_of_pipe_red(t_into_lists *vars);
-
-
 int		check_if_pipe(char *final_str);
-void	str_with_pipes(t_all *main_struct, t_list *com_in_str, int pipe_amount);
-void	count_pipes(t_list *com_in_str, int *pipe_amount);
-void	ft_split_pipes(t_into_lists *vars, char *final_str, char c, int *k);
+void	ft_split_pipes(t_var *var, char *final_str, char c, int *k);
 
-void	func(t_list *com_in_str, t_all *main_struct, t_var	*var, char *token);
-void	other_command(char **args, char *token, t_all *main_struct);
-// void	str_with_pipes(t_list *com_in_str, int pipe_amount);
+void	func(t_list *com_in_str, t_all *main_struct, t_var	*var);
+void	other_command( t_all *main_struct, t_list *inner, char **args, char *token);
+int	check_work_redirs(t_list *inner, t_all *main_struct);
+void	redir_input(t_all *main_struct, char *file);
+int		redir_outputs(t_all *main_struct, char *args, char *type);
 
-
-void	redirs(t_list *com_in_str, t_into_lists *vars, t_all *main_struct, t_var *var);
 #endif
