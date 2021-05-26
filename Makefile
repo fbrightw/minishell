@@ -17,8 +17,8 @@ SRCS	:=	parser/terminal_str.c parser/actions.c parser/splitting_str.c parser/fro
 			parser/utils/analysis_spec_symb.c parser/utils/additional_for_termcaps.c parser/utils/finding_pipes.c \
 			parser/utils/skipping_redirs.c
 
-SRCS	+= 	${wildcard execution/builtins/*.c} ${wildcard execution/work_it/*.c} execution/pipes_redirs/other_command.c execution/pipes_redirs/handle_pipes.c \
-			parser/utils/types_of_redirs.c execution/pipes_redirs/redirs.c
+SRCS	+= 	${wildcard execution/builtins/*.c} ${wildcard execution/work_it/*.c} execution/pipes_redirs/other_command.c \
+			parser/utils/types_of_redirs.c execution/pipes_redirs/redirects.c execution/pipes_redirs/handle_pipes.c
 
 OBJS	:=	$(SRCS:.c=.o)
 
@@ -28,7 +28,7 @@ all:	$(NAME)
 
 $(NAME):	$(OBJS)
 	ar rcs $(NAME) $(OBJS)
-	gcc -fsanitize=address -g main_fbrightw.c -ltermcap libft/libft.a $(NAME)
+	gcc -g main_fbrightw.c -ltermcap libft/libft.a $(NAME)
 
 $(LIBFT):
 	$(MAKE) -C ./libft

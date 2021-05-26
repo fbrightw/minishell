@@ -1,5 +1,26 @@
 #include "../includes/minishell.h"
 
+void	execute_part(t_list *com_in_str, t_var *var)
+{
+	t_list *pipe_list;
+
+	while (com_in_str)
+	{
+		pipe_list = (t_list*)(com_in_str->content);
+		if (ft_lstsize(pipe_list) == 1) // нет пайпа
+		{
+			int j = 0;
+			char **array = ((t_in_list*)(pipe_list->content))->args;
+			if (array[0])
+				var->token = ft_strdup(array[0]);
+			func(pipe_list, var); // checking for built-in or other commands
+		}
+		else
+			handle_pipes(&pipe_list, var);
+		com_in_str = com_in_str->next;
+	}
+}
+
 char	*find_variable_in_env(t_all *main_struct, char *varible, int fl_to_free)
 {
 	int i;
@@ -7,7 +28,7 @@ char	*find_variable_in_env(t_all *main_struct, char *varible, int fl_to_free)
 
 	i = 0;
 	final_str = NULL;
-	while (main_struct->env[i])
+	while (main_struct->env[i] && varible)
 	{
 		if (!ft_strncmp(varible, main_struct->env[i], ft_strlen(varible)) && main_struct->env[i][ft_strlen(varible)] == '=')
 		{
@@ -17,6 +38,8 @@ char	*find_variable_in_env(t_all *main_struct, char *varible, int fl_to_free)
 		else
 			i++;
 	}
+	if (!varible)
+		return (NULL);
 	if (!final_str)
 	{
 		final_str = malloc(sizeof(char));
@@ -45,60 +68,51 @@ int	is_it_b(char *token, t_var *var)
 			k++;
 		}
 		if (!(token[i]) && !(var->builtins[j][k]))
+		{
+			free(var->token);
+			var->token = ft_strdup(var->builtins[j]);
 			return (1);
+		}
 		j++;
 	}
 	return (0);
 }
 
-int	check_work_redirs(t_list *inner, t_all *main_struct)
+int	check_work_redirs(t_list *pipe_list)
 {
-	t_list *in_inner =  ((t_in_list*)(inner->content))->redirs;
-
-	while (inner)
+	t_list *reds_struct =  ((t_in_list*)(pipe_list->content))->reds_struct;
+	while (pipe_list)
 	{
-		// if (input || output || app_out)
-		// {
-		// 	if (!strcmp(input, "absent") ||
-		// 	!strcmp(output, "absent") ||
-		// 	!strcmp(app_out, "absent"))
-		// 		write(1, "ERROR\n", 6);
-		// }
-		// else
+		while (reds_struct)
 		{
-			while (in_inner)
-			{
-				t_reds *reds = (t_reds*)(in_inner->content);
-				char *redir = reds->redir;
-				int type = reds->type;
-				if (type == 0)
-					redir_input(main_struct, redir);
-				else if (type == 1)
-					redir_outputs(main_struct, redir, "OUTPUT");
-				else if (type == 2)
-					redir_outputs(main_struct, redir, "APP_OUTPUT");
-				else if (type == -1)
-					write(1, "ERROR\n", 3);
-				in_inner = in_inner->next;
-			}
+			// write(1, "YA\n", 3);
+			t_reds *reds = (t_reds*)(reds_struct->content);
+			int type = reds->type;
+			if (type == 0)
+				redir_input(reds);
+			else if (type == 1)
+				redir_outputs(reds, "OUTPUT");
+			else if (type == 2)
+				redir_outputs(reds, "APP_OUTPUT");
+			else if (type == -1)
+				write(1, "ERROR\n", 3);
+			reds_struct = reds_struct->next;
 		}
-		inner = inner->next;
+		pipe_list = pipe_list->next;
 	}
 	return (1);
 }
 
-void	func(t_list *com_in_str, t_all *main_struct, t_var	*var)
+void	func(t_list *pipe_list, t_var	*var)
 {
-	// printf("token %s\n", var->token);
 	if (var->token)
 	{
 		if (is_it_b(var->token, var))
-			printf("\nYES, built in\n");
+
+			// printf("\nYES, built in\n");
+			// other_command(var, pipe_list, var->token);
+			printf("%s\n", var->token);
 		else
-		{
-			t_list *inner = (t_list*)(com_in_str->content);
-			char **args = ((t_in_list*)(inner->content))->args;
-			other_command(main_struct, inner, args, var->token);
-		}
+			other_command(var, pipe_list, var->token);
 	}
 }

@@ -1,79 +1,25 @@
 #include "../../includes/minishell.h"
 
-char	*go_to(char *env)
-{
-	while (*env != '=')
-		env++;
-	return (++env);
-}
-
-char 	*find_path(char **env, char *act_path)
-{
-	int i = 0;
-	int j;
-	char *path;
-
-	while (env[i])
-	{
-		j = 0;
-		while (env[i][j] != '=')
-		{
-			while (env[i][j] == act_path[j])
-				j++;
-			if (env[i][j] == '=')
-			{
-				if (j == 4)
-					return(go_to(env[i]));
-				else
-					i++;
-			}
-			else
-				i++;
-		}
-	}
-}
-
-void	putting_fd(t_all *main_struct)
-{
-	dup2(main_struct->std_fd[1], 1);
-	close(1);
-}
-
-void	child_work(t_all *main_struct, t_list *inner, char **args, char *token)
+void	child_work(t_var *var, t_list *pipe_list, char *to_token)
 {
 	char **array_of_path;
-	char *temp;
 	int i;
-
-	char to_token[ft_strlen(token)+ 2];
-	to_token[0] = '/';
-	i = 0;
-
-	// merge token and path
-	char **env = main_struct->env;
-	char *path = find_path(env, "PATH");
-	while (token[i])
-	{
-		to_token[i+1] = token[i];
-		i++;
-	}
-	to_token[i+1] = '\0';
+	char *path_with_cmd;
+	char **args = ((t_in_list*)((pipe_list)->content))->args;
 
 	i = 0;
-	if (path)
+	if (var->path)
 	{
-		array_of_path = ft_split(path, ':');
+		array_of_path = ft_split(var->path, ':');
 		while (array_of_path[i])
 		{
-			path = ft_strdup(array_of_path[i]);
-			path = ft_strjoin(path, to_token);
-			check_work_redirs(inner, main_struct);
-			{
-				if (execve(path, args, main_struct->env) == -1)
-					i++;
-				else
-					exit(0);
-			}
+			path_with_cmd = ft_strdup(array_of_path[i]);
+			path_with_cmd = ft_strjoin(path_with_cmd, to_token);
+			check_work_redirs(pipe_list);
+			if (execve(path_with_cmd, args, var->general->env) == -1)
+				i++;
+			else
+				exit(0);
 		}
 		write(1, "Didn't find in path\n", 21);
 		exit(0);
@@ -82,18 +28,53 @@ void	child_work(t_all *main_struct, t_list *inner, char **args, char *token)
 		write(1, "error\n", 7);
 }
 
-void	other_command( t_all *main_struct, t_list *inner, char **args, char *token)
+char	*find_path(t_var *var)
 {
-	char **env;
+	char *path = NULL;
+	char *env;
+	int i;
 
-	char *path;
-	char *temp;
+	i = 0;
+	while (var->general->env[i])
+	{
+		if (!ft_strncmp((var->general->env)[i], "PATH", 4))
+		{
+			env = ft_strdup((var->general)->env[i]);
+			path = ft_substr(env, 5, (ft_strlen(env) - ft_strlen("PATH")));
+		}
+		i++;
+	}
+	return (path);
+}
 
-	// env = main_struct->env;
-	// path = find_path(env, "PATH");
+char	*join_token_slash(char *token)
+{
+	char *to_token;
+	int i;
+
+	i = 0;
+	to_token = malloc(sizeof(char) * (ft_strlen(token) + 2));
+	to_token[0] = '/';
+	while (token[i])
+	{
+		to_token[i+1] = token[i];
+		i++;
+	}
+	to_token[i+1] = '\0';
+	return (to_token);
+}
+
+void	other_command(t_var *var, t_list *pipe_list, char *token)
+{
+	char *env;
+	char *to_token;
+	int i;
+
+	i = 0;
+	var->path = find_path(var);
+	to_token = join_token_slash(token);
 	pid_t pid = fork(); // create a child;
-	// we are in child proccess
 	if (pid == 0)
-		child_work(main_struct, inner, args, token);
+		child_work(var, pipe_list, to_token);
 	pid_t pid1 = wait3(&pid, 0, 0);
 }

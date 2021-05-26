@@ -8,7 +8,6 @@ int	ft_putchar (int c)
 
 void	word(t_list **history, t_var *var, t_history **list_struct)
 {
-	//write down
 	t_history *hist;
 	write(1, var->str, 1);
 	if (*var->str != '\n' && *var->str != '\4')
@@ -19,7 +18,6 @@ void	word(t_list **history, t_var *var, t_history **list_struct)
 				(*list_struct)->temp = ft_strjoin((*list_struct)->temp, var->str);
 			else
 			{
-				// write(1, "YA\n", 3);
 				free((*list_struct)->temp);
 				(*list_struct)->temp = ft_strdup(var->str);
 			}
@@ -92,9 +90,8 @@ void	up(t_list **history, t_var *var, t_history **list_struct)
 	}
 	else
 	{
-		// write(1, "YA\n", 3);
 		tputs(restore_cursor, 1, ft_putchar);
 		tputs(tgetstr("ce", 0), 1, ft_putchar); //delete line
-		write(1, (hist)->changes, ft_strlen((hist)->changes));
+		write(1, hist->changes, ft_strlen(hist->changes));
 	}
 }
