@@ -12,6 +12,34 @@
 
 #include "../../includes/minishell.h"
 
+void	set_pwd_env(t_all *main_struct)
+{
+	char	*new_dir;
+	char	buf[PATH_MAX];
+	char	**env_arr;
+	int		i;
+
+	new_dir = getcwd(buf, PATH_MAX);
+	if (new_dir == NULL)
+	{
+		error_msg(NULL, errno, main_struct, 1);
+		return ;
+	}
+	env_arr = main_struct->envs->env_arr;
+	i = 0;
+	while (env_arr[i])
+	{
+		if ((ft_strncmp(env_arr[i],"PWD", 3) == 0)
+			&& (env_arr[i][3] == '='))
+		{
+			free(env_arr[i]);
+			env_arr[i] = ft_strcat("PWD=", new_dir);
+			break ;
+		}
+		i++;
+	}
+}
+
 void	ft_cd(t_all *main_struct, char **arr)
 {
 	int		ret;
@@ -44,5 +72,7 @@ void	ft_cd(t_all *main_struct, char **arr)
 	ret = chdir(new_dir);
 	if (ret == -1)
 		error_msg(NULL, errno, main_struct, 1);
+	else
+		set_pwd_env(main_struct);
 	free(new_dir);
 }
