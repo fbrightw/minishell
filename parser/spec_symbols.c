@@ -28,6 +28,41 @@ void	result_d_quotes(char **word)
 		(*word)++;
 }
 
+void	quot_in_dquots(t_var *var, char **command, char **word)
+{
+	char *str;
+
+	str = NULL;
+	var->temp[1] = '\0';
+	building_word(command, "\'");
+	(*word)++;
+	if (**word == '$')
+	{
+		dollar(word, var, command);
+		if (**word == '\'')
+		{
+			building_word(command, "'");
+			(*word)++;
+		}
+	}
+	else
+	{
+		if (**word != '\'')
+		{
+			var->temp[0] = **word;
+			building_word(command, var->temp);
+			(*word)++;
+		}
+		else
+		{
+			building_word(command, "\'");
+			(*word)++;
+		}
+	}
+	if (**word == '$')
+		dollar(word, var, command);
+}
+
 void	double_quotes(char **word, t_var *var, char **command)
 {
 	while (**word && **word != '\"')
@@ -44,6 +79,8 @@ void	double_quotes(char **word, t_var *var, char **command)
 				(*word)++;
 			}
 		}
+		else if (**word == '\'')
+			quot_in_dquots(var, command, word);
 		else
 		{
 			var->temp[0] = **word;
@@ -57,9 +94,10 @@ void	double_quotes(char **word, t_var *var, char **command)
 char	*deal_with_spec_smbls(t_list *com_in_str, t_var *var, char *word)
 {
 	int i;
-	char *command = NULL;
+	char *command;
 
 	i = 0;
+	command = NULL;
 	var->temp[1] = '\0';
 	while (*word)
 	{
@@ -81,5 +119,6 @@ char	*deal_with_spec_smbls(t_list *com_in_str, t_var *var, char *word)
 			word++;
 		}
 	}
+	printf("%s\n", command);
 	return (command);
 }

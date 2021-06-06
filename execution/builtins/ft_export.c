@@ -7,14 +7,14 @@ int		check_identifier(char *arg, int is_export)
 	i = 0;
 	while (arg[i])
 	{
-		if (ft_isalnum(arg[i]) == 0 && !is_export)
+		if (ft_isalnum(arg[i]) == 0 && arg[i] != '_' && !is_export)
 			return (-1);
 		if (ft_isalnum(arg[i]) == 0 && is_export && arg[i] != '=')
 			return (-1);
 		i++;
 	}
 	if ((arg[0] >= 'a' && arg[0] <= 'z') ||
-		(arg[0] >= 'A' && arg[0] <= 'Z'))
+		(arg[0] >= 'A' && arg[0] <= 'Z') || arg[0] == '_')
 		return (1);
 	return (-1);
 }

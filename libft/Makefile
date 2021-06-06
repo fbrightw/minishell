@@ -6,7 +6,7 @@
 #    By: fbrightw <marvin@42.fr>                    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2020/11/03 13:08:47 by fbrightw          #+#    #+#              #
-#    Updated: 2020/11/13 14:00:28 by fbrightw         ###   ########.fr        #
+#    Updated: 2021/05/09 17:21:19 by fbrightw         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -16,7 +16,7 @@ CC	=	gcc
 	
 NAME	=	libft.a
 	
-CFLAGS	=	-Wall -Wextra -Werror
+CFLAGS	=	-g -Wall -Wextra -Werror
 
 SRCS	:=	$(wildcard ft_*.c) 
 
@@ -42,7 +42,7 @@ bonus:	$(NAME) $(OBJS_B)
 	$(CC) $(CFLAGS) -c $< -o $(<:.c=.o)
 
 clean: 
-	$(RM)	$(OBJS)	$(OBJS_B)
+	$(RM)	 $(OBJS)	$(OBJS_B)
 
 fclean:	clean 
 	$(RM)	$(NAME)

@@ -41,12 +41,21 @@ int	no_backslash(t_var *var, char **word, char **command)
 {
 	char *var_in_env = NULL;
 	(*word)++;
-	// if ($)
+	while (**word && **word == '$')
+	{
+		building_word(&var_in_env, "$");
+		(*word)++;
+	}
 	while (**word && **word != '\"')
 	{
-		var->temp[0] = **word;
-		building_word(&var_in_env, var->temp);
-		(*word)++;
+		if (**word != '\'')
+		{
+			var->temp[0] = **word;
+			building_word(&var_in_env, var->temp);
+			(*word)++;
+		}
+		else
+			quot_in_dquots(var, command, word);
 	}
 	if (**word == '\"')
 	{
@@ -55,8 +64,7 @@ int	no_backslash(t_var *var, char **word, char **command)
 			building_word(command, var_in_env);
 			return (1);
 		}
-		else
-			return (1);
+		return (1);
 	}
 	else
 	{
@@ -78,7 +86,6 @@ int	dollar_in_quot(t_var *var, char **word, char **command)
 		else
 		{
 			temp[0] = **word;
-			building_word(command, var_in_env);
 			building_word(command, temp);
 			(*word)++;
 			return(1);
@@ -89,37 +96,18 @@ int	dollar_in_quot(t_var *var, char **word, char **command)
 
 void	dollar(char **word, t_var *var, char **command)
 {
-	char *temp = NULL;
-	char *str = NULL;
+	char *var_in_env;
 
+	var_in_env = NULL;
 	var->temp[1] = '\0';
 	(*word)++;
-	while (**word && !find_exact_symb("\'\"$\\", **word))
+	while (**word && !find_exact_symb("\'\"\\$?/", **word))
 	{
 		var->temp[0] = **word;
-		if (!temp)
-			temp = ft_strdup(var->temp);
-		else
-			temp = ft_strjoin(temp, var->temp);
+		building_word(&var_in_env, var->temp);
 		(*word)++;
 	}
-	str = find_variable_in_env(var->general, temp, 0);
-	if (!str)
-	{
-		if (!*command)
-			*command = ft_strdup("$");
-		else
-			*command = ft_strjoin(*command, "$");
-	}
-	else if (str[0] == '\0')
-		(*word)++;
-	else
-	{
-		if (!*command)
-			*command = ft_strdup(str);
-		else
-			*command = ft_strjoin(*command, str);
-	}
+	join_status_or_envs_var(var, var_in_env, word, command);
 }
 
 void	single_quotes(char **word, t_var *var, char **command)
@@ -138,4 +126,32 @@ void	single_quotes(char **word, t_var *var, char **command)
 	}
 	else
 		(*word)++;
+}
+
+void	word_with_spec_symbols(char **final_str, char **term_str, char *ch)
+{
+	char temp[2];
+
+	temp[1] = '\0';
+	temp[0] = **term_str;
+	building_word(final_str, temp);
+	(*term_str)++;
+	if (**term_str == '?')
+	{
+		temp[0] = **term_str;
+		building_word(final_str, temp);
+		(*term_str)++;
+	}
+	else
+	{
+		while (**term_str && **term_str != ch[0])
+		{
+			temp[0] = **term_str;
+			building_word(final_str, temp);
+			(*term_str)++;
+		}
+		temp[0] = **term_str;
+		building_word(final_str, temp);
+		(*term_str)++;
+	}
 }

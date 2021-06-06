@@ -8,42 +8,6 @@ int	check_if_pipe(char *final_str)
 		return (1);
 }
 
-void	put_array_into_list(int q_words, int *i, t_var *var, t_in_list *inner_struct)
-{
-	int k;
-	int j;
-	int word_index;
-
-	k = 0;
-	j = 0;
-	word_index = *i - q_words;
-	while (j < q_words)
-	{
-		if (var->words[word_index])
-		{
-			if (!strcmp(var->words[word_index], ">") || !strcmp(var->words[word_index], ">>") ||
-				!strcmp(var->words[word_index], "<"))
-				open_accord_redir(inner_struct, var, &j, &word_index);
-			else
-			{
-				k += 1;
-				inner_struct->args = alloc_mem_for_word(inner_struct->args, k, var->words[word_index]);
-				// printf("%s\n", var->words[word_index]);
-				j++;
-				word_index++;
-			}
-		}
-	}
-}
-
-void	define_inpipelist(t_in_list **in_pipelist)
-{
-	*in_pipelist = malloc(sizeof(t_in_list));
-	(*in_pipelist)->args = (char**)malloc(sizeof(char*));
-	(*in_pipelist)->args[0] = NULL;
-	(*in_pipelist)->reds_struct = NULL;
-}
-
 void	split_list_by_pipes(t_list **pipe_list, t_in_list *in_pipelist, t_var *var)
 {
 	int i;
@@ -60,19 +24,19 @@ void	split_list_by_pipes(t_list **pipe_list, t_in_list *in_pipelist, t_var *var)
 			k = 0;
 			ft_lstadd_back(pipe_list, ft_lstnew(in_pipelist));
 			define_inpipelist(&in_pipelist);
-			i++;
+			free(var->words[i]);
 		}
 		else
-		{
-			i++;
 			k++;
-		}
+		i++;
 	}
 	if (var->pipe_amount > 0 && k > 0)
 	{
 		put_array_into_list(k, &i, var, in_pipelist);
 		ft_lstadd_back(pipe_list, ft_lstnew(in_pipelist));
 	}
+	else if (var->pipe_amount > 0 && k == 0)
+		printf("ERROR\n"); // last word is PIPE
 }
 
 void	divide_big_list(t_list **pipe_list, t_var *var, int words_q)
@@ -97,13 +61,6 @@ void	divide_big_list(t_list **pipe_list, t_var *var, int words_q)
 		put_array_into_list(k, &i, var, in_pipelist);
 		ft_lstadd_back(pipe_list, ft_lstnew(in_pipelist));
 	}
-	// i = 0;
-	// while (((t_in_list*)((*pipe_list)->content))->args[i])
-	// {
-	// 	printf("%s\n", ((t_in_list*)((*pipe_list)->content))->args[i]);
-	// 	i++;
-	// }
-	free(var->words);
 }
 
 void	ft_split_pipes(t_var *var, char *final_str, char c, int *k)
@@ -126,14 +83,15 @@ void	ft_split_pipes(t_var *var, char *final_str, char c, int *k)
 			*k += 1;
 			char *get_to = ft_strdup(word);
 			var->words = alloc_mem_for_word(var->words, *k, get_to);
+			free(word);
 			word = NULL;
 		}
 		if (final_str[i] == '|')
 		{
+			char *temp = ft_strdup("|");
 			*k += 1;
-			var->words = alloc_mem_for_word(var->words, *k, "|");
+			var->words = alloc_mem_for_word(var->words, *k, temp);
 		}
 		i++;
 	}
-	free(word);
 }

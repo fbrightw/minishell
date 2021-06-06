@@ -9,8 +9,9 @@ int	ft_putchar (int c)
 void	word(t_list **history, t_var *var, t_history **list_struct)
 {
 	t_history *hist;
-	write(1, var->str, 1);
-	if (*var->str != '\n' && *var->str != '\4')
+	if (!g_flag)
+		write(1, var->str, 1);
+	if (!g_flag && *var->str != '\n' && *var->str != '\4')
 	{
 		if (var->numb == var->quant)
 		{
