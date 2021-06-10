@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ft_export2.c                                       :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: rvinnie <marvin@42.fr>                     +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2021/06/08 17:35:35 by rvinnie           #+#    #+#             */
+/*   Updated: 2021/06/08 17:35:36 by rvinnie          ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../../includes/minishell.h"
 
 char	*check_argument(char *to_export, char *arg, char **vars)
@@ -16,8 +28,8 @@ char	*check_argument(char *to_export, char *arg, char **vars)
 	i = 0;
 	while (vars[i])
 	{
-		if (ft_strncmp(vars[i], arg, ft_strlen(arg)) == 0 &&
-			vars[i][ft_strlen(arg)] == '=')
+		if (ft_strncmp(vars[i], arg, ft_strlen(arg)) == 0
+			&& vars[i][ft_strlen(arg)] == '=')
 		{
 			to_export = ft_strdup(vars[i]);
 			return (to_export);
@@ -28,7 +40,7 @@ char	*check_argument(char *to_export, char *arg, char **vars)
 	return (to_export);
 }
 
-int		is_in_arr(char **env, char *to_export)
+int	is_in_arr(char **env, char *to_export)
 {
 	int		len;
 	int		i;
@@ -49,7 +61,7 @@ int		is_in_arr(char **env, char *to_export)
 	return (-1);
 }
 
-char **add_el(t_all *main_struct, char **env, char *to_export, int len)
+char	**add_el(t_all *main_struct, char **env, char *to_export, int len)
 {
 	int		i;
 	char	**new_arr;

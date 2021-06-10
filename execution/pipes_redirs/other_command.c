@@ -1,129 +1,98 @@
 #include "../../includes/minishell.h"
 
-int		check_if_bin_file(char *word)
+void	child_finding_in_path(t_exec *ex, t_var *var, char **args)
 {
-	if (word[0] == '.' || word[1] == '\\')
-		return (1);
-	return (0);
+	var->i = 0;
+	while (ex->array_of_path[var->i])
+	{
+		ex->path_with_cmd = ft_strdup(ex->array_of_path[var->i]);
+		ex->path_with_cmd = ft_strjoin(ex->path_with_cmd, ex->to_token);
+		if (execve(ex->path_with_cmd, \
+		args, var->general->envs->env_arr) == -1)
+			var->i++;
+	}
+	exit (0);
 }
 
-void	child_work(t_var *var, t_list *pipe_list, t_exec *exec_vars)
+void	child_work(t_var *var, t_list *pipe_list, t_exec *ex)
 {
-	int i;
-	char **args = ((t_in_list*)((pipe_list)->content))->args;
+	char	**args;
 
-	signal(SIGQUIT, SIG_DFL);//ctrl+/
-	signal(SIGINT, SIG_DFL); //ctrl+c
-	i = 0;
+	args = ((t_in_list *)((pipe_list)->content))->args;
+	signal(SIGQUIT, SIG_DFL);
+	signal(SIGINT, SIG_DFL);
 	check_work_redirs(pipe_list, var);
-	if (!check_if_bin_file(var->token))
+	if (!check_if_bin_file(var, var->token))
 	{
 		if (var->path)
-		{
-			exec_vars->array_of_path = ft_split(var->path, ':');
-			while (exec_vars->array_of_path[i])
-			{
-				exec_vars->path_with_cmd = ft_strdup(exec_vars->array_of_path[i]);
-				exec_vars->path_with_cmd = ft_strjoin(exec_vars->path_with_cmd, exec_vars->to_token);
-				if (execve(exec_vars->path_with_cmd, args, var->general->envs->env_arr) == -1)
-					i++;
-			}
-		}
+			child_finding_in_path(ex, var, args);
 		else
 		{
 			write(1, "error\n", 7);
 			exit(0);
 		}
 	}
-	else
-	{
-		execve(var->token, args, var->general->envs->env_arr);
-		printf("%s\n", strerror(errno));
-		// exit(126);
-	}
+	exec_bin_file(var, var->token, args);
 }
 
-char	*find_path(t_var *var)
+int	finding_in_path(t_exec *exec_vars, struct stat *buffer)
 {
-	char *path = NULL;
-	char *env;
-	int i;
+	int	i;
 
 	i = 0;
-	while (var->general->envs->env_arr[i])
+	while (exec_vars->array_of_path[i])
 	{
-		if (!ft_strncmp(var->general->envs->env_arr[i], "PATH", 4))
+		exec_vars->path_with_cmd = \
+		ft_strdup(exec_vars->array_of_path[i]);
+		exec_vars->path_with_cmd = \
+		ft_strjoin(exec_vars->path_with_cmd, exec_vars->to_token);
+		if (stat(exec_vars->path_with_cmd, buffer) == 0)
 		{
-			env = ft_strdup(var->general->envs->env_arr[i]);
-			path = ft_substr(env, 5, (ft_strlen(env) - ft_strlen("PATH")));
+			free(exec_vars->path_with_cmd);
+			return (1);
 		}
-		i++;
+		else
+		{
+			free(exec_vars->path_with_cmd);
+			i++;
+		}
 	}
-	return (path);
-}
-
-char	*join_token_slash(char *token)
-{
-	char *to_token;
-	int i;
-
-	i = 0;
-	to_token = malloc(sizeof(char) * (ft_strlen(token) + 2));
-	to_token[0] = '/';
-	while (token[i])
-	{
-		to_token[i+1] = token[i];
-		i++;
-	}
-	to_token[i+1] = '\0';
-	return (to_token);
-}
-
-void	freing(t_exec *exec_vars, t_var *var)
-{
-	free(exec_vars->to_token);
-	free(exec_vars);
-	free(var->path);
+	return (0);
 }
 
 int	check_command(t_var *var, t_list *pipe_list, t_exec *exec_vars)
 {
-	struct stat *buffer;
-	int i;
+	struct stat	buffer;
 
-	i = 0;
-	buffer = malloc(sizeof(struct stat));
 	if (var->path)
 	{
 		exec_vars->array_of_path = ft_split(var->path, ':');
-		while (exec_vars->array_of_path[i])
+		if (!finding_in_path(exec_vars, &buffer))
 		{
-			exec_vars->path_with_cmd = ft_strdup(exec_vars->array_of_path[i]);
-			exec_vars->path_with_cmd = ft_strjoin(exec_vars->path_with_cmd, exec_vars->to_token);
-			if (stat(exec_vars->path_with_cmd , buffer) == 0)
-				return (1);
+			if (S_ISDIR(buffer.st_mode))
+			{
+				var->status = 126;
+				// write(2, "", 1);
+				// printf("command not found\n");
+			}
 			else
-				i++;
+			{
+				var->status = 127;
+				printf("%s %s\n", var->token, ": command not found");
+			}
+			return (0);
 		}
-		if (S_ISDIR(buffer->st_mode))
-		{
-			var->status = 127;
-			printf("command not found\n");
-		}
-		else
-		{
-			var->status = 127;
-			printf("%s %s\n", var->token, ": command not found");
-		}
-		return (0);
+		return (1);
 	}
+	return (0);
 }
 
 void	other_command(t_var *var, t_list *pipe_list, char *token)
 {
-	t_exec *exec_vars;
-	char *env;
-	int i;
+	t_exec	*exec_vars;
+	char	*env;
+	int		i;
+	pid_t	pid;
 
 	i = 0;
 	exec_vars = malloc(sizeof(t_exec));
@@ -131,11 +100,10 @@ void	other_command(t_var *var, t_list *pipe_list, char *token)
 	exec_vars->to_token = join_token_slash(token);
 	if (check_command(var, pipe_list, exec_vars))
 	{
-		pid_t pid = fork();
+		pid = fork();
 		if (pid == 0)
 			child_work(var, pipe_list, exec_vars);
 		waitpid(pid, &(var->status), 0);
-		freing(exec_vars, var);
 		if (WIFEXITED(var->status))
 			var->status = WEXITSTATUS(var->status);
 		else if (WIFSIGNALED(var->status))
@@ -143,4 +111,5 @@ void	other_command(t_var *var, t_list *pipe_list, char *token)
 		else if (WIFSTOPPED(var->status))
 			var->status = 128 + WSTOPSIG(var->status);
 	}
+	freeing(exec_vars, var);
 }

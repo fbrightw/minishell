@@ -12,7 +12,7 @@
 
 #include "../../includes/minishell.h"
 
-int get_arr_len(char *arr[])
+int	get_arr_len(char *arr[])
 {
 	int		i;
 
@@ -54,7 +54,7 @@ void	free_arr(char **arr)
 	free(arr);
 }
 
-int		ft_isnum(char *str)
+int	ft_isnum(char *str)
 {
 	int		i;
 	char	ch;

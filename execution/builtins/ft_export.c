@@ -1,6 +1,18 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ft_export.c                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: rvinnie <marvin@42.fr>                     +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2021/06/08 17:34:13 by rvinnie           #+#    #+#             */
+/*   Updated: 2021/06/08 17:34:14 by rvinnie          ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../../includes/minishell.h"
 
-int		check_identifier(char *arg, int is_export)
+int	check_identifier(char *arg, int is_export)
 {
 	int		i;
 
@@ -13,8 +25,8 @@ int		check_identifier(char *arg, int is_export)
 			return (-1);
 		i++;
 	}
-	if ((arg[0] >= 'a' && arg[0] <= 'z') ||
-		(arg[0] >= 'A' && arg[0] <= 'Z') || arg[0] == '_')
+	if ((arg[0] >= 'a' && arg[0] <= 'z')
+		|| (arg[0] >= 'A' && arg[0] <= 'Z') || arg[0] == '_')
 		return (1);
 	return (-1);
 }
@@ -25,14 +37,14 @@ void	print_export(char **env)
 	int		len;
 
 	len = get_arr_len(env);
-	i = 1;
+	i = 0;
 	while (env[i])
 	{
 		write(1, "declare -x ", 12);
 		print_with_quotes(env[i]);
 		if (i == len - 1)
 			break ;
-		write(1,"\n",1);
+		write(1, "\n", 1);
 		i++;
 	}
 }
@@ -71,7 +83,7 @@ char	**copy_env(t_all *main_struct, char **env)
 	int		i;
 
 	row = get_arr_len(env);
-	new_arr = malloc((row + 1) * sizeof(char*));
+	new_arr = malloc((row + 1) * sizeof(char *));
 	if (!new_arr)
 	{
 		error_msg("failed to allocate memory", 0, main_struct, 1);
@@ -102,7 +114,6 @@ void	ft_export(t_all *main_struct, char **arr)
 
 	main_struct->state = 0;
 	env = main_struct->envs->env_arr;
-	// vars = main_struct->vars;
 	vars[0] = NULL;
 	i = 1;
 	while (arr[i])
@@ -118,7 +129,7 @@ void	ft_export(t_all *main_struct, char **arr)
 	if (get_arr_len(arr) == 1)
 	{
 		print_export(sort_export(new_arr));
-		write(1,"\n",1);
+		write(1, "\n", 1);
 	}
 	free_arr(new_arr);
 }

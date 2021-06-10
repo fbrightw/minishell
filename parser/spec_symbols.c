@@ -1,84 +1,50 @@
 #include "../includes/minishell.h"
 
-void	building_word(char **str1, char *str2)
+void	dollar(char **word, t_var *var, char **command)
 {
-	if (!*str1)
-		*str1 = ft_strdup(str2);
-	else
-		*str1 = ft_strjoin(*str1, str2);
-}
+	char	*var_in_env;
 
-void	backslash_in_double(char **word, char **command, t_var *var)
-{
+	var_in_env = NULL;
 	(*word)++;
-	var->temp[1] = '\0';
-	var->temp[0] = **word;
-	building_word(command, var->temp);
-	(*word)++;
-}
-
-void	result_d_quotes(char **word)
-{
-	if (!**word)
+	while (**word && !find_exact_symb("\'\"\\$?/", **word))
 	{
-		write(1, "ERROR double Quot\n", 19);
-		exit(0);
+		var->temp[0] = **word;
+		building_word(&var_in_env, var->temp);
+		(*word)++;
+	}
+	join_st_or_envs_var(var, var_in_env, word, command);
+}
+
+void	single_quotes(char **word, t_var *var, char **command)
+{
+	(*word)++;
+	while (**word && **word != '\'')
+	{
+		var->temp[0] = **word;
+		building_word(command, var->temp);
+		(*word)++;
+	}
+	if (!(**word))
+	{
+		printf("syntax error near unexpected token\n");
+		var->syntax_fl = 1;
+		return ;
 	}
 	else
 		(*word)++;
 }
 
-void	quot_in_dquots(t_var *var, char **command, char **word)
-{
-	char *str;
-
-	str = NULL;
-	var->temp[1] = '\0';
-	building_word(command, "\'");
-	(*word)++;
-	if (**word == '$')
-	{
-		dollar(word, var, command);
-		if (**word == '\'')
-		{
-			building_word(command, "'");
-			(*word)++;
-		}
-	}
-	else
-	{
-		if (**word != '\'')
-		{
-			var->temp[0] = **word;
-			building_word(command, var->temp);
-			(*word)++;
-		}
-		else
-		{
-			building_word(command, "\'");
-			(*word)++;
-		}
-	}
-	if (**word == '$')
-		dollar(word, var, command);
-}
-
 void	double_quotes(char **word, t_var *var, char **command)
 {
+	(*word)++;
 	while (**word && **word != '\"')
 	{
+		if (var->syntax_fl)
+			return ;
 		if (**word == '$')
 			dollar_in_quot(var, word, command);
 		else if (**word == '\\')
-		{
-			if (find_exact_symb("\\\"$", (*word)[1]))
-				backslash(word, command, var);
-			else
-			{
-				building_word(command, "\\");
-				(*word)++;
-			}
-		}
+			backslash_in_dquotes(word, command, var);
 		else if (**word == '\'')
 			quot_in_dquots(var, command, word);
 		else
@@ -88,26 +54,40 @@ void	double_quotes(char **word, t_var *var, char **command)
 			(*word)++;
 		}
 	}
-	result_d_quotes(word);
+	if (!var->syntax_fl)
+		result_d_quotes(var, word);
 }
 
-char	*deal_with_spec_smbls(t_list *com_in_str, t_var *var, char *word)
+void	backslash(char **word, char **command, t_var *var)
 {
-	int i;
-	char *command;
+	(*word)++;
+	if (**word)
+	{
+		var->temp[0] = **word;
+		building_word(command, var->temp);
+		(*word)++;
+	}
+	else
+	{
+		printf("syntax error near unexpected token \n");
+		var->syntax_fl = 1;
+	}
+}
 
-	i = 0;
+char	*deal_spec_smbls(t_list *com_in_str, t_var *var, char *word)
+{
+	char	*command;
+
 	command = NULL;
 	var->temp[1] = '\0';
 	while (*word)
 	{
-		if (*word == '\'')  // если увидели кавычки, то приписываем то что внутри
+		if (var->syntax_fl)
+			break ;
+		if (*word == '\'')
 			single_quotes(&word, var, &command);
 		else if (*word == '\"')
-		{
-			word++;
 			double_quotes(&word, var, &command);
-		}
 		else if (*word == '$')
 			dollar(&word, var, &command);
 		else if (*word == '\\')
@@ -119,6 +99,5 @@ char	*deal_with_spec_smbls(t_list *com_in_str, t_var *var, char *word)
 			word++;
 		}
 	}
-	printf("%s\n", command);
-	return (command);
+	return (check_syntaxs_fl(var, command));
 }

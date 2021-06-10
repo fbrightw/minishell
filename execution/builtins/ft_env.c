@@ -12,7 +12,7 @@
 
 #include "../../includes/minishell.h"
 
-int		check_equal_sign(char *str)
+int	check_equal_sign(char *str)
 {
 	int		i;
 

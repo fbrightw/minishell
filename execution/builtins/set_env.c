@@ -12,6 +12,12 @@
 
 #include "../../includes/minishell.h"
 
+void	put_error_exit(t_all *main_struct, char *err)
+{
+	error_msg(err, 0, main_struct, 1);
+	exit(1);
+}
+
 void	set_env(t_all *main_struct, t_env *s_env, char **env)
 {
 	int		row;
@@ -22,30 +28,21 @@ void	set_env(t_all *main_struct, t_env *s_env, char **env)
 	i = 0;
 	while (env[row])
 		row++;
-	env_array = malloc((row + 1) * sizeof(char*));
+	env_array = malloc((row + 1) * sizeof(char *));
 	if (!env_array)
-	{
-		error_msg("failed to allocate memory", 0, main_struct, 1);
-		exit(1);
-	}
+		put_error_exit(main_struct, "failed to allocate memory");
 	while (env[i])
 	{
 		env_array[i] = ft_strdup(env[i]);
-		if (!env_array[i])
+		if (!env_array[i++])
 		{
-			error_msg("failed to allocate memory", 0, main_struct, 1);
 			free_arr(env_array);
-			exit(1);
+			put_error_exit(main_struct, "failed to allocate memory");
 		}
-		i++;
 	}
 	env_array[i] = NULL;
 	s_env->env_arr = env_array;
-	i = 0;
 	s_env->home = getenv("HOME");
 	if (!s_env->home)
-	{
-		error_msg("failed to get environment variable", 0, main_struct, 1);
-		exit(1);
-	}
+		put_error_exit(main_struct, "failed to get environment variable");
 }

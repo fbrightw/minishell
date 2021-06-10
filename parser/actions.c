@@ -8,7 +8,8 @@ int	ft_putchar (int c)
 
 void	word(t_list **history, t_var *var, t_history **list_struct)
 {
-	t_history *hist;
+	t_history	*hist;
+
 	if (!g_flag)
 		write(1, var->str, 1);
 	if (!g_flag && *var->str != '\n' && *var->str != '\4')
@@ -16,7 +17,8 @@ void	word(t_list **history, t_var *var, t_history **list_struct)
 		if (var->numb == var->quant)
 		{
 			if (((*list_struct)->temp)[0] != '\0')
-				(*list_struct)->temp = ft_strjoin((*list_struct)->temp, var->str);
+				(*list_struct)->temp = \
+				ft_strjoin((*list_struct)->temp, var->str);
 			else
 			{
 				free((*list_struct)->temp);
@@ -31,10 +33,10 @@ void	word(t_list **history, t_var *var, t_history **list_struct)
 	}
 }
 
-void	backsp(t_list **history, t_var *var,  t_history **list_struct)
+void	backsp(t_list **history, t_var *var, t_history **list_struct)
 {
-	int len;
-	t_history *hist;
+	t_history	*hist;
+	int			len;
 
 	len = 0;
 	if (var->numb == var->quant)
@@ -62,23 +64,24 @@ void	backsp(t_list **history, t_var *var,  t_history **list_struct)
 
 void	down(t_list **history, t_var *var, t_history **list_struct)
 {
-	t_history *hist;
+	t_history	*hist;
+
 	tputs(restore_cursor, 1, ft_putchar);
 	tputs(tgetstr("ce", 0), 1, ft_putchar);
-
 	if (var->numb < var->quant)
 		var->numb += 1;
 	if (var->numb < var->quant)
 		hist = exact_list(*history, var);
 	if (var->numb < var->quant)
-		write(1,(hist)->changes, ft_strlen((hist)->changes));
+		write(1, (hist)->changes, ft_strlen((hist)->changes));
 	else
 		write(1, (*list_struct)->temp, ft_strlen((*list_struct)->temp));
 }
 
 void	up(t_list **history, t_var *var, t_history **list_struct)
 {
-	t_history *hist;
+	t_history	*hist;
+
 	if (var->numb > 1)
 		var->numb -= 1;
 	if (var->numb > 0)
@@ -86,13 +89,13 @@ void	up(t_list **history, t_var *var, t_history **list_struct)
 	if (var->numb == var->quant)
 	{
 		tputs(restore_cursor, 1, ft_putchar);
-		tputs(tgetstr("ce", 0), 1, ft_putchar); //delete line
+		tputs(tgetstr("ce", 0), 1, ft_putchar);
 		write(1, (*list_struct)->temp, ft_strlen((*list_struct)->temp));
 	}
 	else
 	{
 		tputs(restore_cursor, 1, ft_putchar);
-		tputs(tgetstr("ce", 0), 1, ft_putchar); //delete line
+		tputs(tgetstr("ce", 0), 1, ft_putchar);
 		write(1, hist->changes, ft_strlen(hist->changes));
 	}
 }

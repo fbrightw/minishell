@@ -16,28 +16,30 @@ char	*return_from_env(char *variable, char *final_str, int fl_to_free)
 
 char	*find_variable_in_env(t_all *main_struct, char *varible, int fl_to_free)
 {
-	int i;
-	char *final_str;
+	char	*final_str;
+	int		i;
 
 	i = 0;
 	final_str = NULL;
 	while (main_struct->envs->env_arr[i] && varible)
 	{
-		if (!ft_strncmp(varible, main_struct->envs->env_arr[i], ft_strlen(varible))
+		if (!ft_strncmp(varible, \
+		main_struct->envs->env_arr[i], ft_strlen(varible))
 			&& main_struct->envs->env_arr[i][ft_strlen(varible)] == '=')
 		{
 			final_str = main_struct->envs->env_arr[i] + ft_strlen(varible) + 1;
-			break;
+			break ;
 		}
 		else
 			i++;
 	}
-	return(return_from_env(varible, final_str, fl_to_free));
+	return (return_from_env(varible, final_str, fl_to_free));
 }
 
 void	get_status(t_var *var, char **word, char **command)
 {
-	char *str1;
+	char	*str1;
+
 	var->general->state = var->status;
 	str1 = ft_itoa(var->status);
 	(*word)++;
@@ -46,28 +48,30 @@ void	get_status(t_var *var, char **word, char **command)
 		free(str1);
 }
 
-void	join_status_or_envs_var(t_var *var, char *var_in_env, char **word, char **command)
+void	join_st_or_envs_var(t_var *var, char *in_env, char **word, char **com)
 {
-	char *str;
+	char	*str;
 
-	if (var_in_env)
+	if (in_env)
 	{
-		str = find_variable_in_env(var->general, var_in_env, 1);
+		str = find_variable_in_env(var->general, in_env, 1);
 		if (!str)
-			building_word(command, "$");
+			building_word(com, "$");
 		else if (str[0] == '\0')
 			(*word)++;
 		else
-			building_word(command, str);
+			building_word(com, str);
 	}
 	else
 	{
 		if (**word == '?')
-			get_status(var, word, command);
+			get_status(var, word, com);
 		else if (**word == '/')
 		{
-			building_word(command, "$/");
+			building_word(com, "$/");
 			(*word)++;
 		}
+		else if (!**word)
+			building_word(com, "$");
 	}
 }

@@ -12,15 +12,38 @@ void	termcaps(t_var *var, struct termios *term, struct termios *term1)
 	term->c_cc[VTIME] = 1;
 }
 
-void	handle_signal_slash(int sig)
+void	define(t_list *history, t_history **list_struct, \
+			t_var *var, struct termios term)
 {
-	(void)(sig);
+	var->str[0] = '\0';
+	(*list_struct) = malloc(sizeof(t_history));
+	(*list_struct)->temp = malloc(sizeof(char));
+	(*list_struct)->changes = NULL;
+	(*list_struct)->temp[0] = '\0';
+	var->quant = ft_lstsize(history) + 1;
+	var->numb = var->quant;
+	tcsetattr(0, TCSANOW, &term);
+	tgetent(0, var->term_name);
+	ft_putstr_fd("\e[32m minishell \e[0m", 1);
+	tputs(save_cursor, 1, ft_putchar);
 }
 
-void	handle_signal_c(int sig)
+char	*save_history_in_lists(t_list **history, t_var *var, \
+struct termios term)
 {
-	if (sig == 2)
-		g_flag = 1;
+	t_history	*list_struct;
+
+	var->syntax_fl = 0;
+	define(*history, &list_struct, var, term);
+	main_while(history, var, list_struct);
+	if (!strcmp(var->str, "\n"))
+		write(1, "\n", 1);
+	if (g_flag)
+		write(1, "\n", 1);
+	if (var->numb == var->quant)
+		return (not_from_history(history, var, &list_struct));
+	else
+		return (from_history(history, var, &list_struct));
 }
 
 int	main(int argc, char *argv[], char *env[])
@@ -41,10 +64,13 @@ int	main(int argc, char *argv[], char *env[])
 	while (1)
 	{
 		g_flag = 0;
-		ft_memset(var.str, 0, 200);
 		var.term_str = save_history_in_lists(&history, &var, term);
 		if (var.term_str && !g_flag)
-			split_into_commands(var.term_str, &var, term1);
+		{
+			tcsetattr(0, TCSANOW, &term1);
+			var.fl = 0;
+			split_into_commands(var.term_str, &var);
+		}
 		tputs(save_cursor, 1, ft_putchar);
 	}
 }

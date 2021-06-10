@@ -2,35 +2,29 @@
 
 void	redir_outputs(t_reds *reds, char *type)
 {
-	// if (reds->file_fd == -1)
-	// {
-	// 	printf("error with file opening\n");
-	// 	// free_everuthing;
-	// }
 	dup2(reds->file_fd, 1);
 	close(reds->file_fd);
 }
 
 void	redir_input(t_reds *reds)
 {
-	// if (reds->file_fd == -1)
-	// {
-	// 	printf("error with file opening\n");
-	// 	// free_everuthing;
-	// }
 	dup2(reds->file_fd, 0);
 	close(reds->file_fd);
 }
 
 int	check_work_redirs(t_list *pipe_list, t_var *var)
 {
-	t_list *reds_struct = ((t_in_list*)(pipe_list->content))->reds_struct;
+	t_list	*reds_struct;
+	t_reds	*reds;
+	int		type;
+
+	reds_struct = ((t_in_list *)(pipe_list->content))->reds_struct;
 	while (pipe_list)
 	{
 		while (reds_struct)
 		{
-			t_reds *reds = (t_reds*)(reds_struct->content);
-			int type = reds->type;
+			reds = (t_reds *)(reds_struct->content);
+			type = reds->type;
 			if (type == 0)
 				redir_input(reds);
 			else if (type == 1)
@@ -48,8 +42,8 @@ int	check_work_redirs(t_list *pipe_list, t_var *var)
 
 void	split_by_redirs(t_var *var, char *word, int *k)
 {
-	int i;
-	char *into_array;
+	char	*into_array;
+	int		i;
 
 	i = 0;
 	into_array = NULL;
@@ -57,7 +51,7 @@ void	split_by_redirs(t_var *var, char *word, int *k)
 	var->word = word;
 	while (var->word[i])
 	{
-		if (var->word[i] == OUTPUT) // ">"
+		if (var->word[i] == OUTPUT)
 			output_types(var, &i, &into_array, k);
 		else if (var->word[i] == INPUT)
 			input(var, &into_array, k, &i);
@@ -75,7 +69,7 @@ void	split_by_redirs(t_var *var, char *word, int *k)
 	}
 }
 
-int		check_if_redir(t_var *var, char *word, int *k)
+int	check_if_redir(t_var *var, char *word, int *k)
 {
 	while (*word)
 	{
